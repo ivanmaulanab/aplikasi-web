@@ -59,34 +59,10 @@
             width: 100%;
             padding: 28px 7%;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             position: relative;
             z-index: 2;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            border: 2px solid #ff2d20;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ff2d20;
-            font-weight: bold;
-            font-size: 20px;
-        }
-
-        .brand-name {
-            font-size: 19px;
-            font-weight: bold;
         }
 
         .version {
@@ -102,7 +78,7 @@
         main {
             width: 86%;
             max-width: 1250px;
-            margin: 30px auto 70px;
+            margin: 5px auto 70px;
             position: relative;
             z-index: 1;
         }
@@ -110,17 +86,6 @@
         .hero {
             margin-bottom: 45px;
             max-width: 750px;
-        }
-
-        .tag {
-            display: inline-block;
-            color: #ff4438;
-            border: 1px solid rgba(255, 45, 32, 0.35);
-            background: rgba(255, 45, 32, 0.08);
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-bottom: 20px;
         }
 
         .hero h1 {
@@ -317,11 +282,6 @@
 
     <!-- Navbar -->
     <nav>
-        <div class="brand">
-            <div class="brand-icon">L</div>
-            <div class="brand-name">Aplikasi Web</div>
-        </div>
-
         <div class="version">
             Laravel 13.29.0
         </div>
@@ -333,7 +293,6 @@
 
         <!-- Hero -->
         <section class="hero">
-            <div class="tag">● Praktik Aplikasi Web</div>
 
             <h1>
                 Aplikasi Web<br>
@@ -345,6 +304,7 @@
                 Lingkungan pengembangan Laravel telah berhasil
                 disiapkan dan siap digunakan untuk pengembangan aplikasi.
             </p>
+
         </section>
 
 
