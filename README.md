@@ -56,3 +56,24 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+## Pertemuan 03: Information Architecture, Wireframe & Prototype
+
+Pada Pertemuan 3, proyek **SIPINJAM (Sistem Peminjaman Ruang dan Peralatan Kampus)** berfokus pada perancangan arsitektur informasi, alur interaksi pengguna, wireframe beresolusi terstandarisasi, dan spesifikasi prototipe interaktif pada branch `risky-job3`.
+
+Dokumen lengkap tugas dapat diakses pada direktori [Pertemuan03/](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03):
+- **Scope Canvas**: [01-scope-canvas.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/01-scope-canvas.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/01-scope-canvas.md)
+- **Sitemap**: [02-sitemap.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/02-sitemap.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/02-sitemap.md)
+- **User Flow Pengguna (Mahasiswa)**: [03-user-flow-pengguna.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/03-user-flow-pengguna.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/03-user-flow-pengguna.md)
+- **User Flow Admin (Petugas Sarpras)**: [04-user-flow-admin.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/04-user-flow-admin.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/04-user-flow-admin.md)
+- **Wireframe Desktop (1440 × 900 px)**: [05-wireframe-desktop.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/05-wireframe-desktop.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/05-wireframe-desktop.md)
+- **Wireframe Mobile (390 × 844 px)**: [06-wireframe-mobile.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/06-wireframe-mobile.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/06-wireframe-mobile.md)
+- **Spesifikasi Prototipe Interaktif**: [06-prototype.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/06-prototype.md)
+- **Usability Walkthrough**: [07-usability-walkthrough.pdf](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/07-usability-walkthrough.pdf) | [Markdown](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/07-usability-walkthrough.md)
+- **Keputusan Desain**: [08-keputusan-desain.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/08-keputusan-desain.md)
+- **Figma Blueprint & Layout Specs**: [FIGMA-BLUEPRINT.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/FIGMA-BLUEPRINT.md)
+- **Matriks Keterlacakan Kebutuhan**: [traceability-matrix.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/traceability-matrix.md)
+- **README Pertemuan 3**: [README.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/README.md)
+
