@@ -1,79 +1,129 @@
-# Dokumentasi Tugas Praktik Aplikasi Web — Pertemuan 3
-**Sistem Peminjaman Ruang dan Peralatan Kampus "SIPINJAM"**  
-**Program Studi Informatika — Mata Kuliah: Praktik Aplikasi Web (INF60295)**
+# DOKUMENTASI TUGAS PRAKTIK APLIKASI WEB — PERTEMUAN 3
+
+# SIPINJAM
+### Sistem Peminjaman Ruang dan Peralatan Kampus
+
+**Program Studi:** Informatika — Universitas Negeri Yogyakarta  
+**Mata Kuliah:** Praktik Aplikasi Web (INF60295)  
+**Pertemuan:** 3  
+**Branch:** `risky-job3`
 
 ---
 
-## 1. Identitas Proyek & Anggota Tim
+## 1. Deskripsi Proyek
 
-- **Nama Produk**: SIPINJAM (Sistem Peminjaman Ruang dan Peralatan Kampus)
-- **Topik Pembahasan Pertemuan 3**: Information Architecture, Sitemap, User Flow, Wireframe (Desktop & Mobile), Interactive Prototype, Usability Walkthrough, dan Design Decisions.
-- **Branch Kerja**: `risky-job3`
+SIPINJAM merupakan Sistem Peminjaman Ruang dan Peralatan Kampus yang dirancang untuk membantu mahasiswa dalam mencari ruang, mengajukan peminjaman secara online, dan melihat status pengajuan.
 
-### Susunan Anggota Kelompok
-| No | Nama Lengkap | NIM | Peran & Kontribusi Utama |
-| :---: | :--- | :---: | :--- |
-| **1** | **Ivan Maulana Bahtiar** | 24051130047 | Penyusunan Problem Statement & Product Vision Pertemuan 2; Review Arsitektur Informasi & Keselarasan Visi Produk pada Pertemuan 3. |
-| **2** | **Yuki Ramadhan** | 24051130053 | Penulisan 10 User Story & Pengujian Prinsip INVEST Pertemuan 2; Review Keterlacakan Matriks Kebutuhan (Traceability Matrix). |
-| **3** | **Risky Aditya Pratama** | 24051130057 | **Penanggung Jawab Utama Pengerjaan Job Pertemuan 3**; Perancangan Scope Canvas, Sitemap, User Flow (Mahasiswa & Petugas), Wireframe Desktop (D01–D04) & Mobile (M01–M04), Spesifikasi Prototipe Interaktif, Usability Walkthrough, Log Keputusan Desain, Figma Blueprint, dan Kompilasi Berkas PDF. |
-| **4** | **Arfa Novan Akbar** | 24051130058 | Penyusunan Persona Canvas Pertemuan 2; Validasi Skenario Pengujian Usability Persona Rani & Pak Yusuf pada Pertemuan 3. |
+Sistem juga menyediakan rancangan untuk Petugas Sarana dan Prasarana dalam memeriksa pengajuan, melakukan verifikasi, menyetujui, atau menolak pengajuan.
 
----
+Pada Pertemuan 3, hasil dari Pertemuan 2 dikembangkan menjadi rancangan:
 
-## 2. Ringkasan Ruang Lingkup (Scope Pertemuan 3)
-
-Berdasarkan Product Backlog hasil Pertemuan 2, iterasi Pertemuan 3 berfokus pada 5 User Story inti (*Core Scope*):
-1. **US-01 (Must, 5 SP)**: Mahasiswa mencari ruang tersedia berdasarkan tanggal dan kapasitas peserta.
-2. **US-02 (Must, 5 SP)**: Mahasiswa mengajukan peminjaman ruang secara daring melalui formulir ringkas.
-3. **US-03 (Should, 3 SP)**: Mahasiswa memantau status persetujuan pengajuan melalui bukti tiket digital.
-4. **US-07 (Must, 5 SP)**: Petugas Sarana & Prasarana memverifikasi berkas pengajuan masuk dan mendeteksi bentrok jadwal.
-5. **US-09 (Should, 3 SP)**: Petugas Sarana & Prasarana menolak pengajuan bermasalah dengan kewajiban mengisi alasan penolakan.
-
-*Fitur Out of Scope (Iterasi Berikutnya)*: Peminjaman peralatan terpisah/bersamaan (US-06), kalender matriks penuh per jam (US-08), pembatalan mandiri (US-04), riwayat arsip masa lalu (US-05), dan manajemen CRUD master data ruang (US-10).
+- Information Architecture
+- Sitemap
+- User Flow
+- Wireframe Desktop
+- Wireframe Mobile
+- Interactive Prototype
+- Usability Walkthrough
+- Design Decisions
 
 ---
 
-## 3. Struktur Berkas & Artefak Deliverables
+## 2. Anggota Kelompok
 
-Folder `Pertemuan03/` ini berisi seluruh berkas resmi tugas sesuai pedoman modul mata kuliah:
+| No | Nama | NIM | Kontribusi |
+|---:|---|---:|---|
+| 1 | Ivan Maulana Bahtiar | 24051130047 | Problem Statement, Product Vision, dan review Arsitektur Informasi |
+| 2 | Yuki Ramadhan | 24051130053 | User Story, INVEST, dan review Traceability Matrix |
+| 3 | Risky Aditya Pratama | 24051130057 | Scope Canvas, Sitemap, User Flow, Wireframe, Prototype, Usability Walkthrough, Design Decisions, Figma Blueprint, dan kompilasi dokumen |
+| 4 | Arfa Novan Akbar | 24051130058 | Persona Canvas dan validasi skenario usability |
 
+---
+
+## 3. Scope Pertemuan 3
+
+User Story yang digunakan sebagai Core Scope:
+
+- **US-01** — Mencari Ruang
+- **US-02** — Mengajukan Peminjaman
+- **US-03** — Melihat Status Pengajuan
+- **US-07** — Verifikasi Pengajuan
+- **US-09** — Menolak Pengajuan
+
+### Out of Scope
+
+- **US-04** — Membatalkan pengajuan
+- **US-05** — Melihat riwayat peminjaman
+- **US-06** — Mengajukan peralatan bersamaan dengan ruang
+- **US-08** — Melihat jadwal seluruh ruang dalam kalender
+- **US-10** — Mengelola data ruang dan peralatan
+
+---
+
+## 4. Hasil Pengerjaan
+
+Hasil pengerjaan Pertemuan 3 disimpan di folder `Pertemuan03/`.
+
+| No | Dokumen | Keterangan |
+|---:|---|---|
+| 1 | `01-scope-canvas.pdf` | Scope dan batasan prototype |
+| 2 | `02-sitemap.pdf` | Struktur halaman SIPINJAM |
+| 3 | `03-user-flow-pengguna.pdf` | Alur mahasiswa |
+| 4 | `04-user-flow-admin.pdf` | Alur petugas |
+| 5 | `05-wireframe-desktop.pdf` | Wireframe desktop |
+| 6 | `06-wireframe-mobile.pdf` | Wireframe mobile |
+| 7 | `06-prototype.md` | Dokumentasi alur prototype |
+| 8 | `07-usability-walkthrough.pdf` | Walkthrough dan temuan usability |
+| 9 | `08-keputusan-desain.md` | Keputusan desain |
+| 10 | `traceability-matrix.md` | Hubungan User Story, Acceptance Criteria, dan rancangan |
+| 11 | `FIGMA-BLUEPRINT.md` | Blueprint rancangan Figma |
+
+File `.md` pada folder digunakan sebagai dokumentasi pendukung dari masing-masing hasil perancangan.
+
+---
+
+## 5. Figma Prototype
+
+Prototype SIPINJAM dibuat menggunakan Figma dan mencakup rancangan mobile serta desktop.
+
+### Link Figma
+
+https://www.figma.com/make/0mvebSy0cTwKrHN96rxYC5/aplikasi-SIPINJAM?fullscreen=1&t=b43c8YE05xkDuhP3-1&code-node-id=0-9
+
+Prototype mencakup:
+
+- M01 — Beranda / Cari Ruang
+- M02 — Detail Ruang
+- M03 — Form Pengajuan
+- M03-ERROR — Error State
+- M04 — Status Pengajuan
+- D01 — Dashboard
+- D02 — Daftar Pengajuan
+- D03 — Detail Pengajuan
+- D03-ALERT — Conflict Alert
+- D04 — Tolak Pengajuan
+- Approved State
+- Rejected State
+
+---
+
+## 6. Alur Prototype
+
+### Mahasiswa
+
+```text
+M01 → M02 → M03 → M04
+             ↓
+         M03-ERROR
+             ↓
+            M03
 ```
-Pertemuan03/
-├── 01-scope-canvas.pdf          <- Dokumen PDF Resmi Scope Canvas
-├── 01-scope-canvas.md           <- Source Markdown Scope Canvas
-├── 02-sitemap.pdf               <- Dokumen PDF Resmi Sitemap & Arsitektur Informasi
-├── 02-sitemap.md                <- Source Markdown Sitemap
-├── 03-user-flow-pengguna.pdf    <- Dokumen PDF Resmi User Flow Mahasiswa (Happy & Failure Path)
-├── 03-user-flow-pengguna.md     <- Source Markdown User Flow Mahasiswa
-├── 04-user-flow-admin.pdf       <- Dokumen PDF Resmi User Flow Petugas Sarpras
-├── 04-user-flow-admin.md        <- Source Markdown User Flow Petugas
-├── 05-wireframe-desktop.pdf     <- Dokumen PDF Spesifikasi Wireframe Desktop (1440x900 px)
-├── 05-wireframe-desktop.md      <- Source Markdown Wireframe Desktop
-├── 06-wireframe-mobile.pdf      <- Dokumen PDF Spesifikasi Wireframe Mobile (390x844 px)
-├── 06-wireframe-mobile.md       <- Source Markdown Wireframe Mobile
-├── 06-prototype.md              <- Spesifikasi Alur Interaktif & Hotspot Prototipe
-├── 07-usability-walkthrough.pdf <- Dokumen PDF Resmi Usability Walkthrough (5 Temuan & 3 Revisi)
-├── 07-usability-walkthrough.md  <- Source Markdown Usability Walkthrough
-├── 08-keputusan-desain.md       <- Dokumentasi 6 Keputusan Desain Terstruktur
-├── FIGMA-BLUEPRINT.md           <- Panduan Teknis Komponen, Tata Letak, & Auto Layout untuk Figma
-├── traceability-matrix.md       <- Matriks Ketertelusuran US -> AC -> Layar -> State -> Prototipe
-└── README.md                    <- Dokumentasi Utama Direktori Pertemuan 3 (File Ini)
-```
+### Petugas
 
----
+```text
+D01 → D02 → D03
+             ├── Setujui → Approved
+             │
+             └── Tolak → D04 → Rejected
 
-## 4. Tautan & Panduan Figma
 
-> [!NOTE]
-> Karena perancangan dilakukan secara lokal di lingkungan repositori kode, tautan daring Figma eksternal tidak dikarang (*no dummy external link*). Sebagai gantinya, seluruh panduan posisi absolut/relatif, ukuran frame, kode warna HEX, margin, padding, tipografi, dan koneksi *prototype noodles* telah didokumentasikan secara rinci pada berkas:
-> 👉 [FIGMA-BLUEPRINT.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/FIGMA-BLUEPRINT.md)
-
----
-
-## 5. Ringkasan Keputusan Desain & Usabilitas
-
-1. **Mobile-First untuk Mahasiswa**: Resolusi 390 × 844 px menjamin kemudahan pengajuan dengan satu tangan oleh Rani di sela aktivitas kampus.
-2. **Desktop-First untuk Petugas**: Resolusi 1440 × 900 px dengan format tabel data padat memudahkan Pak Yusuf memindai puluhan pengajuan per minggu secara efisien.
-3. **Pemberian Umpan Balik Cepat**: Komponen *Vertical Stepper Timeline* pada tiket pengajuan menghilangkan kecemasan mahasiswa mengenai progres berkas permohonan.
-4. **Pencegahan Kesalahan Bentrok**: Deteksi bentrok jadwal otomatis pada sisi petugas mencegah terjadinya pemberian izin ganda (*double booking*) pada ruang yang sama.
-5. **Penolakan Akuntabel**: Penolakan wajib disertai catatan alasan, memangkas komunikasi manual melalui WhatsApp atau tatap muka yang tidak tercatat.
