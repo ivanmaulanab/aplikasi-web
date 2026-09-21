@@ -1,7 +1,6 @@
-# DOKUMENTASI TUGAS PRAKTIK APLIKASI WEB — PERTEMUAN 3
+# SIPINJAM — Pertemuan 3
 
-# SIPINJAM
-### Sistem Peminjaman Ruang dan Peralatan Kampus
+## Sistem Peminjaman Ruang dan Peralatan Kampus
 
 **Program Studi:** Informatika — Universitas Negeri Yogyakarta  
 **Mata Kuliah:** Praktik Aplikasi Web (INF60295)  
@@ -16,16 +15,7 @@ SIPINJAM merupakan Sistem Peminjaman Ruang dan Peralatan Kampus yang dirancang u
 
 Sistem juga menyediakan rancangan untuk Petugas Sarana dan Prasarana dalam memeriksa pengajuan, melakukan verifikasi, menyetujui, atau menolak pengajuan.
 
-Pada Pertemuan 3, hasil dari Pertemuan 2 dikembangkan menjadi rancangan:
-
-- Information Architecture
-- Sitemap
-- User Flow
-- Wireframe Desktop
-- Wireframe Mobile
-- Interactive Prototype
-- Usability Walkthrough
-- Design Decisions
+Pada Pertemuan 3, hasil dari Pertemuan 2 dikembangkan menjadi rancangan Information Architecture, Sitemap, User Flow, Wireframe Desktop, Wireframe Mobile, Interactive Prototype, Usability Walkthrough, dan Design Decisions.
 
 ---
 
@@ -42,7 +32,7 @@ Pada Pertemuan 3, hasil dari Pertemuan 2 dikembangkan menjadi rancangan:
 
 ## 3. Scope Pertemuan 3
 
-User Story yang digunakan sebagai Core Scope:
+### Core Scope
 
 - **US-01** — Mencari Ruang
 - **US-02** — Mengajukan Peminjaman
@@ -62,9 +52,9 @@ User Story yang digunakan sebagai Core Scope:
 
 ## 4. Hasil Pengerjaan
 
-Hasil pengerjaan Pertemuan 3 disimpan di folder `Pertemuan03/`.
+Seluruh hasil Pertemuan 3 disimpan pada folder `Pertemuan03/`.
 
-| No | Dokumen | Keterangan |
+| No | File | Keterangan |
 |---:|---|---|
 | 1 | `01-scope-canvas.pdf` | Scope dan batasan prototype |
 | 2 | `02-sitemap.pdf` | Struktur halaman SIPINJAM |
@@ -78,26 +68,27 @@ Hasil pengerjaan Pertemuan 3 disimpan di folder `Pertemuan03/`.
 | 10 | `traceability-matrix.md` | Hubungan User Story, Acceptance Criteria, dan rancangan |
 | 11 | `FIGMA-BLUEPRINT.md` | Blueprint rancangan Figma |
 
-File `.md` pada folder digunakan sebagai dokumentasi pendukung dari masing-masing hasil perancangan.
-
 ---
 
 ## 5. Figma Prototype
 
-Prototype SIPINJAM dibuat menggunakan Figma dan mencakup rancangan mobile serta desktop.
+Prototype SIPINJAM dibuat menggunakan Figma dengan rancangan mobile untuk mahasiswa dan desktop untuk petugas.
 
-### Link Figma
+**Link Figma:**
 
-https://www.figma.com/make/0mvebSy0cTwKrHN96rxYC5/aplikasi-SIPINJAM?fullscreen=1&t=b43c8YE05xkDuhP3-1&code-node-id=0-9
+https://www.figma.com/make/kYpmLhzblBUE0R1Z8d2G5u/aplikasi-SIPINJAM?t=gdUJJM7CDqPL1xoP-1
 
-Prototype mencakup:
+### Frame Mahasiswa
 
 - M01 — Beranda / Cari Ruang
 - M02 — Detail Ruang
 - M03 — Form Pengajuan
-- M03-ERROR — Error State
+- M03-ERROR — Error State Form
 - M04 — Status Pengajuan
-- D01 — Dashboard
+
+### Frame Petugas
+
+- D01 — Dashboard Petugas
 - D02 — Daftar Pengajuan
 - D03 — Detail Pengajuan
 - D03-ALERT — Conflict Alert
@@ -109,21 +100,64 @@ Prototype mencakup:
 
 ## 6. Alur Prototype
 
-### Mahasiswa
+### Alur Mahasiswa
 
 ```text
-M01 → M02 → M03 → M04
-             ↓
-         M03-ERROR
-             ↓
-            M03
+M01 — Beranda / Cari Ruang
+            ↓
+M02 — Detail Ruang
+            ↓
+M03 — Form Pengajuan
+            ↓
+M04 — Status Pengajuan
+
 ```
-### Petugas
 
-```text
-D01 → D02 → D03
-             ├── Setujui → Approved
-             │
-             └── Tolak → D04 → Rejected
+### Kondisi Error
+
+```Text
+M03
+ ↓
+Submit Form
+ ↓
+Data belum lengkap
+ ↓
+M03-ERROR
+ ↓
+Perbaiki Form
+ ↓
+M03
+
+```
+### Alur Petugas
+
+```Text
+D01 — Dashboard
+       ↓
+D02 — Daftar Pengajuan
+       ↓
+D03 — Detail Pengajuan
+       ↓
+   ┌───┼───────────┐
+   ↓   ↓           ↓
+Setujui Konflik    Tolak
+   ↓   ↓           ↓
+Approved D03-ALERT D04
+                    ↓
+                 Rejected
+
+```
 
 
+### Yang saya ubah dari README sebelumnya
+
+Saya **tidak mengubah isi yang memang sudah benar**, hanya merapikan dan menyelaraskan:
+
+- daftar frame dengan Figma terbaru;
+- alur mahasiswa `M01 → M02 → M03 → M04`;
+- kondisi error `M03 → M03-ERROR → M03`;
+- alur petugas `D01 → D02 → D03`;
+- kondisi **Approved, Rejected, dan Conflict Alert**;
+- README dibuat tetap **ringkas**, sedangkan penjelasan detail tetap berada di file PDF/MD masing-masing.
+
+Untuk README GitHub, versi di atas sudah lebih cocok daripada memasukkan seluruh isi dokumentasi laporan ke dalam README.
