@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('rooms.index');
 });
 
-Route::get('/awal', function () {
-    return view('awal');
-});
+Route::resource('rooms', RoomController::class);
+Route::resource('bookings', BookingController::class);
