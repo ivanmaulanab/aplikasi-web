@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Ruangan</title>
+    <title>Edit Peminjaman</title>
 
     <style>
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
-            margin: 0;
             padding: 40px;
         }
 
@@ -19,10 +18,6 @@
             background: white;
             padding: 30px;
             border-radius: 12px;
-        }
-
-        h1 {
-            margin-top: 0;
         }
 
         .form-group {
@@ -36,6 +31,7 @@
         }
 
         input,
+        select,
         textarea {
             width: 100%;
             padding: 10px;
@@ -49,20 +45,20 @@
         }
 
         .error {
-            color: #b91c1c;
             background: #fee2e2;
-            padding: 10px;
+            color: #b91c1c;
+            padding: 12px;
             border-radius: 6px;
             margin-bottom: 20px;
         }
 
         .button {
-            border: none;
+            display: inline-block;
             padding: 10px 16px;
             border-radius: 6px;
+            border: none;
             cursor: pointer;
             text-decoration: none;
-            font-size: 14px;
         }
 
         .save {
@@ -82,7 +78,7 @@
 
 <div class="container">
 
-    <h1>Edit Ruangan</h1>
+    <h1>Edit Peminjaman</h1>
 
     @if($errors->any())
         <div class="error">
@@ -96,59 +92,104 @@
         </div>
     @endif
 
-    <form action="{{ route('rooms.update', $room) }}" method="POST">
+    <form action="{{ route('bookings.update', $booking) }}" method="POST">
+
         @csrf
         @method('PUT')
 
         <div class="form-group">
-            <label for="name">Nama Ruangan</label>
+            <label for="room_id">Ruangan</label>
+
+            <select name="room_id" id="room_id" required>
+
+                @foreach($rooms as $room)
+                    <option value="{{ $room->id }}"
+                        {{ old('room_id', $booking->room_id) == $room->id ? 'selected' : '' }}>
+                        {{ $room->name }} - Kapasitas {{ $room->capacity }} orang
+                    </option>
+                @endforeach
+
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="activity_name">Nama Kegiatan</label>
+
             <input
                 type="text"
-                id="name"
-                name="name"
-                value="{{ old('name', $room->name) }}"
+                id="activity_name"
+                name="activity_name"
+                value="{{ old('activity_name', $booking->activity_name) }}"
                 required
             >
         </div>
 
         <div class="form-group">
-            <label for="capacity">Kapasitas</label>
+            <label for="date">Tanggal</label>
+
+            <input
+                type="date"
+                id="date"
+                name="date"
+                value="{{ old('date', $booking->date) }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="start_time">Jam Mulai</label>
+
+            <input
+                type="time"
+                id="start_time"
+                name="start_time"
+                value="{{ old('start_time', substr($booking->start_time, 0, 5)) }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="end_time">Jam Selesai</label>
+
+            <input
+                type="time"
+                id="end_time"
+                name="end_time"
+                value="{{ old('end_time', substr($booking->end_time, 0, 5)) }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="participants">Jumlah Peserta</label>
+
             <input
                 type="number"
-                id="capacity"
-                name="capacity"
-                value="{{ old('capacity', $room->capacity) }}"
+                id="participants"
+                name="participants"
+                value="{{ old('participants', $booking->participants) }}"
                 min="1"
                 required
             >
         </div>
 
         <div class="form-group">
-            <label for="location">Lokasi</label>
-            <input
-                type="text"
-                id="location"
-                name="location"
-                value="{{ old('location', $room->location) }}"
-                required
-            >
-        </div>
+            <label for="notes">Catatan</label>
 
-        <div class="form-group">
-            <label for="facilities">Fasilitas</label>
             <textarea
-                id="facilities"
-                name="facilities"
-            >{{ old('facilities', $room->facilities) }}</textarea>
+                id="notes"
+                name="notes"
+            >{{ old('notes', $booking->notes) }}</textarea>
         </div>
 
         <button type="submit" class="button save">
             Simpan Perubahan
         </button>
 
-        <a href="{{ route('rooms.index') }}" class="button back">
+        <a href="{{ route('bookings.index') }}" class="button back">
             Kembali
         </a>
+
     </form>
 
 </div>

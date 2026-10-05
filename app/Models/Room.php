@@ -12,7 +12,7 @@ class Room extends Model
         'capacity',
         'location',
         'facilities',
-        'is_available'
+        'is_available',
     ];
 
     public function bookings(): HasMany

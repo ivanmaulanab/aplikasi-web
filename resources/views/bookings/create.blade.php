@@ -1,70 +1,204 @@
-@extends('layouts.app')
-@section('content')
-<div class="container" style="max-width: 650px;">
-  <a href="{{ route('bookings.index') }}" style="display: inline-block; margin-bottom: var(--space-4); text-decoration: none; color: var(--color-primary); font-size: var(--font-size-sm);">&larr; Kembali ke Daftar Pengajuan</a>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Peminjaman</title>
 
-  @if($errors->any())
-    <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
-      <strong style="display: block; margin-bottom: var(--space-1);">Peringatan Validasi:</strong>
-      <ul style="padding-left: var(--space-4);">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
 
-  <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6);">
-    <h2 style="font-size: var(--font-size-xl); font-weight: 800; margin-bottom: var(--space-4);">Formulir Pengajuan Peminjaman Ruang</h2>
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+        }
 
-    <form action="{{ route('bookings.store') }}" method="POST" style="display: flex; flex-direction: column; gap: var(--space-4);">
-      @csrf
-      <div>
-        <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Pilih Ruangan Kampus *</label>
-        <select name="room_id" required style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-          <option value="">-- Pilih Ruang --</option>
-          @foreach($rooms as $room)
-            <option value="{{ $room->id }}" {{ (old('room_id', $selectedRoomId ?? '') == $room->id) ? 'selected' : '' }}>
-              {{ $room->name }} (Maks. {{ $room->capacity }} orang)
-            </option>
-          @endforeach
-        </select>
-      </div>
+        h1 {
+            margin-top: 0;
+        }
 
-      <div>
-        <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Nama Kegiatan / Acara *</label>
-        <input type="text" name="activity_name" value="{{ old('activity_name') }}" placeholder="Contoh: Workshop Laravel" required style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-      </div>
+        .form-group {
+            margin-bottom: 18px;
+        }
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-        <div>
-          <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Tanggal Peminjaman *</label>
-          <input type="date" name="date" value="{{ old('date', date('Y-m-d')) }}" required style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 100px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .back {
+            background: #e5e7eb;
+            color: #111827;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Tambah Peminjaman Ruangan</h1>
+
+    @if($errors->any())
+        <div class="error">
+            <strong>Terjadi kesalahan:</strong>
+
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-        <div>
-          <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Jumlah Peserta *</label>
-          <input type="number" name="participants" value="{{ old('participants') }}" min="1" required style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-        </div>
-      </div>
+    @endif
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-        <div>
-          <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Waktu Mulai *</label>
-          <input type="time" name="start_time" value="{{ old('start_time', '09:00') }}" required style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-        </div>
-        <div>
-          <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Waktu Selesai *</label>
-          <input type="time" name="end_time" value="{{ old('end_time', '11:00') }}" required style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-        </div>
-      </div>
+    <form action="{{ route('bookings.store') }}" method="POST">
+        @csrf
 
-      <div>
-        <label style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 2px;">Catatan / Keperluan Tambahan</label>
-        <textarea name="notes" rows="3" placeholder="Contoh: Proyektor dan mic wireless" style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md);">{{ old('notes') }}</textarea>
-      </div>
+        <div class="form-group">
+            <label for="room_id">Pilih Ruangan</label>
 
-      <button type="submit" style="background: var(--color-primary); color: #fff; padding: var(--space-2); border-radius: var(--radius-md); border: none; font-weight: 700; cursor: pointer;">Kirim Pengajuan</button>
+            <select name="room_id" id="room_id" required>
+                <option value="">-- Pilih Ruangan --</option>
+
+                @foreach($rooms as $room)
+                    <option value="{{ $room->id }}"
+                        {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                        {{ $room->name }} - Kapasitas {{ $room->capacity }} orang
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="activity_name">Nama Kegiatan</label>
+
+            <input
+                type="text"
+                id="activity_name"
+                name="activity_name"
+                value="{{ old('activity_name') }}"
+                placeholder="Contoh: Rapat Organisasi"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="date">Tanggal</label>
+
+            <input
+                type="date"
+                id="date"
+                name="date"
+                value="{{ old('date') }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="start_time">Jam Mulai</label>
+
+            <input
+                type="time"
+                id="start_time"
+                name="start_time"
+                value="{{ old('start_time') }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="end_time">Jam Selesai</label>
+
+            <input
+                type="time"
+                id="end_time"
+                name="end_time"
+                value="{{ old('end_time') }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="participants">Jumlah Peserta</label>
+
+            <input
+                type="number"
+                id="participants"
+                name="participants"
+                value="{{ old('participants') }}"
+                min="1"
+                placeholder="Contoh: 25"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Catatan</label>
+
+            <textarea
+                id="notes"
+                name="notes"
+                placeholder="Catatan tambahan (opsional)"
+            >{{ old('notes') }}</textarea>
+        </div>
+
+        <button type="submit" class="button save">
+            Simpan Peminjaman
+        </button>
+
+        <a href="{{ route('bookings.index') }}" class="button back">
+            Kembali
+        </a>
     </form>
-  </div>
+
 </div>
-@endsection
+
+</body>
+</html>

@@ -1,58 +1,183 @@
-@extends('layouts.app')
-@section('content')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Peminjaman</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .button {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        .action {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-right: 4px;
+        }
+
+        .detail {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .delete {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
 <div class="container">
-  @if(session('success'))
-    <div style="background: var(--status-approved-bg); color: var(--status-approved-text); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); font-weight: 600;">
-      ✓ {{ session('success') }}
-    </div>
-  @endif
 
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
-    <div>
-      <h1 style="font-size: var(--font-size-2xl); font-weight: 800;">Daftar Pengajuan Peminjaman</h1>
-      <p style="color: var(--color-text-muted); font-size: var(--font-size-sm);">Menampilkan seluruh tiket permohonan peminjaman ruang.</p>
-    </div>
-    <div style="display: flex; gap: var(--space-2);">
-      <a href="{{ route('rooms.index') }}" style="background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-main); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); text-decoration: none; font-size: var(--font-size-sm); font-weight: 600;">&larr; Beranda Ruang</a>
-      <a href="{{ route('bookings.create') }}" style="background: var(--color-primary); color: #fff; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); text-decoration: none; font-size: var(--font-size-sm); font-weight: 600;">+ Ajukan Peminjaman</a>
-    </div>
-  </div>
+    <h1>Daftar Peminjaman Ruangan</h1>
 
-  <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
-    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: var(--font-size-sm);">
-      <thead style="background: var(--color-background); border-bottom: 1px solid var(--color-border);">
-        <tr>
-          <th style="padding: var(--space-3) var(--space-4);">Kegiatan</th>
-          <th style="padding: var(--space-3) var(--space-4);">Ruangan</th>
-          <th style="padding: var(--space-3) var(--space-4);">Tanggal & Waktu</th>
-          <th style="padding: var(--space-3) var(--space-4);">Peserta</th>
-          <th style="padding: var(--space-3) var(--space-4);">Status</th>
-          <th style="padding: var(--space-3) var(--space-4);">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($bookings as $booking)
-          <tr style="border-bottom: 1px solid var(--color-border);">
-            <td style="padding: var(--space-4); font-weight: 600;">{{ $booking->activity_name }}</td>
-            <td style="padding: var(--space-4);">{{ $booking->room->name }}</td>
-            <td style="padding: var(--space-4);">{{ $booking->date }} <br><span style="color: var(--color-text-muted); font-size: var(--font-size-xs);">{{ $booking->start_time }} - {{ $booking->end_time }}</span></td>
-            <td style="padding: var(--space-4);">{{ $booking->participants }} Orang</td>
-            <td style="padding: var(--space-4);"><x-status-badge :status="$booking->status" /></td>
-            <td style="padding: var(--space-4);">
-              <form action="{{ route('bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('Batalkan pengajuan ini?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" style="background: transparent; border: none; color: #991b1b; cursor: pointer; font-size: var(--font-size-xs); font-weight: 600;">Batal / Hapus</button>
-              </form>
-            </td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="6" style="padding: var(--space-6); text-align: center; color: var(--color-text-muted);">Belum ada riwayat pengajuan peminjaman di basis data.</td>
-          </tr>
-        @endforelse
-      </tbody>
+    @if(session('success'))
+        <div class="success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <a href="{{ route('bookings.create') }}" class="button">
+        + Tambah Peminjaman
+    </a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Kegiatan</th>
+                <th>Ruangan</th>
+                <th>Tanggal</th>
+                <th>Waktu</th>
+                <th>Peserta</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @forelse($bookings as $booking)
+                <tr>
+                    <td>{{ $booking->activity_name }}</td>
+
+                    <td>
+                        {{ $booking->room->name ?? '-' }}
+                    </td>
+
+                    <td>{{ $booking->date }}</td>
+
+                    <td>
+                        {{ $booking->start_time }} -
+                        {{ $booking->end_time }}
+                    </td>
+
+                    <td>{{ $booking->participants }} orang</td>
+
+                    <td>{{ ucfirst($booking->status) }}</td>
+
+                    <td>
+                        <a href="{{ route('bookings.show', $booking) }}"
+                           class="action detail">
+                            Detail
+                        </a>
+
+                        <a href="{{ route('bookings.edit', $booking) }}"
+                           class="action edit">
+                            Edit
+                        </a>
+
+                        <form action="{{ route('bookings.destroy', $booking) }}"
+                              method="POST"
+                              style="display:inline;">
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit"
+                                    class="action delete"
+                                    onclick="return confirm('Yakin ingin menghapus peminjaman ini?')">
+                                Hapus
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="empty">
+                        Belum ada data peminjaman.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
     </table>
-  </div>
+
 </div>
-@endsection
+
+</body>
+</html>

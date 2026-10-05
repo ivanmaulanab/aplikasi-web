@@ -15,7 +15,7 @@ class Booking extends Model
         'end_time',
         'participants',
         'notes',
-        'status'
+        'status',
     ];
 
     public function room(): BelongsTo

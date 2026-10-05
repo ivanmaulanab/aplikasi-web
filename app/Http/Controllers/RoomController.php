@@ -10,6 +10,7 @@ class RoomController extends Controller
     public function index()
     {
         $rooms = Room::latest()->get();
+
         return view('rooms.index', compact('rooms'));
     }
 
@@ -21,17 +22,19 @@ class RoomController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'capacity' => ['required', 'integer', 'min:1'],
-            'location' => ['required', 'string', 'max:150'],
-            'facilities' => ['nullable', 'string'],
+            'name' => 'required|string|max:255',
+            'capacity' => 'required|integer|min:1',
+            'location' => 'required|string|max:255',
+            'facilities' => 'nullable|string',
         ]);
 
-        $validated['is_available'] = $request->boolean('is_available');
+        $validated['is_available'] = $request->has('is_available');
+
         Room::create($validated);
 
-        return redirect()->route('rooms.index')
-            ->with('success', 'Data ruang berhasil ditambahkan.');
+        return redirect()
+            ->route('rooms.index')
+            ->with('success', 'Ruangan berhasil ditambahkan.');
     }
 
     public function show(Room $room)
@@ -47,23 +50,27 @@ class RoomController extends Controller
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'capacity' => ['required', 'integer', 'min:1'],
-            'location' => ['required', 'string', 'max:150'],
-            'facilities' => ['nullable', 'string'],
+            'name' => 'required|string|max:255',
+            'capacity' => 'required|integer|min:1',
+            'location' => 'required|string|max:255',
+            'facilities' => 'nullable|string',
         ]);
 
-        $validated['is_available'] = $request->boolean('is_available');
+        $validated['is_available'] = $request->has('is_available');
+
         $room->update($validated);
 
-        return redirect()->route('rooms.index')
-            ->with('success', 'Data ruang berhasil diperbarui.');
+        return redirect()
+            ->route('rooms.index')
+            ->with('success', 'Ruangan berhasil diperbarui.');
     }
 
     public function destroy(Room $room)
     {
         $room->delete();
-        return redirect()->route('rooms.index')
-            ->with('success', 'Data ruang berhasil dihapus.');
+
+        return redirect()
+            ->route('rooms.index')
+            ->with('success', 'Ruangan berhasil dihapus.');
     }
 }
