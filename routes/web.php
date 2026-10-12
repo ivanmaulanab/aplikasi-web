@@ -8,7 +8,11 @@ Route::resource('rooms', RoomController::class);
 Route::resource('bookings', BookingController::class);
 
 Route::get('/', function () {
-    return redirect('/peminjaman');
+    return view('sipinjam');
+});
+
+Route::get('/sipinjam', function () {
+    return view('sipinjam');
 });
 
 Route::get('/peminjaman', function () {
