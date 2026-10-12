@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { PeminjamanBarang } from "./components/PeminjamanBarang";
+import { ProfileView } from "./components/ProfileView";
 
 /* ─── Types & Data ────────────────────────────────────────────── */
 
@@ -712,7 +713,7 @@ function M01({ nav }: { nav: (s: string) => void }) {
           <FileText size={20} className="text-[#94A3B8]" />
           <span className="text-[10px] font-medium text-[#94A3B8]">Pengajuan</span>
         </button>
-        <button className="flex-1 flex flex-col items-center gap-0.5 py-1">
+        <button onClick={() => nav("Profil")} className="flex-1 flex flex-col items-center gap-0.5 py-1">
           <User size={20} className="text-[#94A3B8]" />
           <span className="text-[10px] font-medium text-[#94A3B8]">Profil</span>
         </button>
@@ -1008,7 +1009,7 @@ function M04({ nav }: { nav: (s: string) => void }) {
           <FileText size={20} className="text-[#2563EB]" />
           <span className="text-[10px] font-bold text-[#2563EB]">Pengajuan</span>
         </button>
-        <button className="flex-1 flex flex-col items-center gap-0.5 py-1">
+        <button onClick={() => nav("Profil")} className="flex-1 flex flex-col items-center gap-0.5 py-1">
           <User size={20} className="text-[#94A3B8]" />
           <span className="text-[10px] font-medium text-[#94A3B8]">Profil</span>
         </button>
@@ -1017,9 +1018,39 @@ function M04({ nav }: { nav: (s: string) => void }) {
   );
 }
 
+function MProfile({ nav }: { nav: (s: string) => void }) {
+  return (
+    <div className="flex flex-col h-full bg-[#F8FAFC]">
+      <div className="bg-white px-4 py-3.5 flex items-center gap-3 border-b border-[#E2E8F0] shrink-0">
+        <button onClick={() => nav("M01")} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-[#F1F5F9] transition-colors">
+          <ArrowLeft size={18} className="text-[#0F172A]" />
+        </button>
+        <h1 className="font-semibold text-[#0F172A]">Profil Saya</h1>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <ProfileView onBack={() => nav("M01")} isMobile={true} />
+      </div>
+      <nav className="bg-white border-t border-[#E2E8F0] flex px-2 py-1.5 shrink-0">
+        <button onClick={() => nav("M01")} className="flex-1 flex flex-col items-center gap-0.5 py-1">
+          <Home size={20} className="text-[#94A3B8]" />
+          <span className="text-[10px] font-medium text-[#94A3B8]">Beranda</span>
+        </button>
+        <button onClick={() => nav("M04")} className="flex-1 flex flex-col items-center gap-0.5 py-1">
+          <FileText size={20} className="text-[#94A3B8]" />
+          <span className="text-[10px] font-medium text-[#94A3B8]">Pengajuan</span>
+        </button>
+        <button className="flex-1 flex flex-col items-center gap-0.5 py-1">
+          <User size={20} className="text-[#2563EB]" />
+          <span className="text-[10px] font-bold text-[#2563EB]">Profil</span>
+        </button>
+      </nav>
+    </div>
+  );
+}
+
 function MobileUserPrototype() {
   const [screen, setScreen] = useState("M01");
-  const screens = ["M01", "M02", "M03", "M04", "API-Barang"];
+  const screens = ["M01", "M02", "M03", "M04", "API-Barang", "Profil"];
   return (
     <div className="flex flex-col items-center py-8 min-h-[calc(100vh-56px)] bg-slate-200 overflow-x-auto">
       <div className="flex items-center gap-1.5 mb-6">
@@ -1043,6 +1074,7 @@ function MobileUserPrototype() {
             <PeminjamanBarang />
           </div>
         )}
+        {screen === "Profil" && <MProfile nav={setScreen} />}
       </PhoneFrame>
       <p className="mt-4 text-xs text-slate-400 text-center">Klik tombol atau navigasi di dalam layar untuk berpindah halaman</p>
     </div>
@@ -1053,7 +1085,17 @@ function MobileUserPrototype() {
    USER DESKTOP  (DM01 – DM04)
 ══════════════════════════════════════════════════════════════ */
 
-function UserDesktopSidebar({ screen, setScreen, onLogout }: { screen: string; setScreen: (s: string) => void; onLogout?: () => void }) {
+function UserDesktopSidebar({
+  screen,
+  setScreen,
+  onLogout,
+  user,
+}: {
+  screen: string;
+  setScreen: (s: string) => void;
+  onLogout?: () => void;
+  user?: { name?: string; prodi?: string } | null;
+}) {
   const isActive = (key: string) => {
     if (key === "DM01") return ["DM01", "DM02", "DM03"].includes(screen);
     return screen === key;
@@ -1075,9 +1117,9 @@ function UserDesktopSidebar({ screen, setScreen, onLogout }: { screen: string; s
           <div className="w-9 h-9 bg-[#EFF6FF] rounded-full flex items-center justify-center shrink-0">
             <User size={16} className="text-[#2563EB]" />
           </div>
-          <div>
-            <p className="text-sm font-semibold text-[#0F172A]">Rani Amelia</p>
-            <p className="text-xs text-[#64748B]">Mahasiswa · TI-2023</p>
+          <div className="overflow-hidden">
+            <p className="text-sm font-semibold text-[#0F172A] truncate">{user?.name || "Rani Amelia"}</p>
+            <p className="text-xs text-[#64748B] truncate">{user?.prodi ? `Mahasiswa · ${user.prodi}` : "Mahasiswa · TI-2023"}</p>
           </div>
         </div>
       </div>
@@ -1537,9 +1579,11 @@ function DM04({ nav }: { nav: (s: string) => void }) {
 
 function DesktopUserPrototype({ onLogout }: { onLogout?: () => void }) {
   const [screen, setScreen] = useState("DM01");
+  const [currentUser, setCurrentUser] = useState<{ name?: string; prodi?: string } | null>(null);
+
   return (
     <div className="flex" style={{ height: "calc(100vh - 56px)" }}>
-      <UserDesktopSidebar screen={screen} setScreen={setScreen} onLogout={onLogout} />
+      <UserDesktopSidebar screen={screen} setScreen={setScreen} onLogout={onLogout} user={currentUser} />
       <div className="flex-1 overflow-hidden flex flex-col bg-[#F8FAFC]">
         {screen === "DM01" && <DM01 nav={setScreen} />}
         {screen === "DM02" && <DM02 nav={setScreen} />}
@@ -1551,9 +1595,10 @@ function DesktopUserPrototype({ onLogout }: { onLogout?: () => void }) {
           </div>
         )}
         {screen === "profile" && (
-          <div className="flex-1 flex items-center justify-center text-[#64748B]">
-            <p className="text-sm">Halaman Profil — dalam pengembangan</p>
-          </div>
+          <ProfileView
+            onBack={() => setScreen("DM01")}
+            onProfileUpdated={(u) => setCurrentUser({ name: u.name, prodi: u.prodi || undefined })}
+          />
         )}
       </div>
     </div>

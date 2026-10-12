@@ -77,3 +77,72 @@ export async function createPeminjaman(data: {
 
   return result;
 }
+
+export interface UserProfile {
+  id?: number;
+  name: string;
+  email: string;
+  nim?: string | null;
+  prodi?: string | null;
+  fakultas?: string | null;
+  no_telp?: string | null;
+  status_akun?: string;
+  avatar?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProfileUpdatePayload {
+  name: string;
+  email: string;
+  nim?: string;
+  prodi?: string;
+  fakultas?: string;
+  no_telp?: string;
+}
+
+/**
+ * 3. GET: Mengambil data profil pengguna dari backend
+ */
+export async function getProfile(): Promise<ApiResponse<UserProfile>> {
+  const res = await fetch(`${API_BASE_URL}/profile`, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Gagal mengambil data profil: HTTP ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+/**
+ * 4. PUT: Memperbarui data profil pengguna di backend
+ */
+export async function updateProfile(data: ProfileUpdatePayload): Promise<ApiResponse<UserProfile>> {
+  const res = await fetch(`${API_BASE_URL}/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = result.errors 
+      ? Object.values(result.errors).flat().join(", ") 
+      : (result.message || "Gagal memperbarui profil");
+    const err = new Error(errorMsg) as Error & { errors?: Record<string, string[]> };
+    err.errors = result.errors;
+    throw err;
+  }
+
+  return result;
+}
+

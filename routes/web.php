@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RoomController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RoomController;
+use Illuminate\Support\Facades\Route;
 
 Route::resource('rooms', RoomController::class);
 Route::resource('bookings', BookingController::class);
@@ -22,3 +22,11 @@ Route::get('/peminjaman', function () {
 Route::get('/peminjaman/detail/{id}', function ($id) {
     return view('peminjaman.detail', ['id' => $id]);
 });
+
+Route::get('/profile', function () {
+    return view('sipinjam');
+})->name('profile');
+
+Route::get('/profil', function () {
+    return view('sipinjam');
+})->name('profil');

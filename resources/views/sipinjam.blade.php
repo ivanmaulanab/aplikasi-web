@@ -17,8 +17,8 @@
             height: 100%;
         }
     </style>
-    <link rel="stylesheet" crossorigin href="{{ asset('assets/index-CGl3X5Rg.css') }}">
-    <script type="module" crossorigin src="{{ asset('assets/index-MHQk5kOA.js') }}"></script>
+    <link rel="stylesheet" crossorigin href="{{ asset('assets/index-DQjW_DXK.css') }}">
+    <script type="module" crossorigin src="{{ asset('assets/index-DYADJqlB.js') }}"></script>
 </head>
 <body>
     <div id="root"></div>

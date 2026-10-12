@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PeminjamanController;
+use App\Http\Controllers\Api\ProfileController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +23,10 @@ Route::get('/ping', function () {
         'timestamp' => now()->toIso8601String(),
     ]);
 });
+
+// REST API Profil Pengguna
+Route::get('/profile', [ProfileController::class, 'show'])->name('api.profile.show');
+Route::put('/profile', [ProfileController::class, 'update'])->name('api.profile.update');
 
 // REST API Peminjaman Barang / Alat
 Route::apiResource('peminjaman', PeminjamanController::class);
