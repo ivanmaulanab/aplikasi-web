@@ -1,13 +1,4 @@
-/**
- * API Service untuk SIPINJAM - Integrasi Backend Laravel
- * URL Backend default: http://127.0.0.1:8000/api
- */
-
-// URL Backend: otomatis menyesuaikan apakah dijalankan terpisah (port 5173) atau menyatu (port 8000)
-export const API_BASE_URL =
-  typeof window !== "undefined" && (window.location.port === "8000" || window.location.port === "")
-    ? "/api"
-    : "http://127.0.0.1:8000/api";
+export const API_BASE_URL = "/api";
 
 export interface PeminjamanItem {
   id?: number;
@@ -28,6 +19,87 @@ export interface ApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly errors?: Record<string, string[]>,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export type UserRole = "user" | "admin";
+
+async function getCsrfToken(): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/csrf-token`, {
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+  });
+
+  if (!res.ok) {
+    throw new ApiError(`Gagal menyiapkan sesi keamanan: HTTP ${res.status}`, res.status);
+  }
+
+  const result: { csrfToken: string } = await res.json();
+
+  return result.csrfToken;
+}
+
+function createApiError(
+  result: { message?: string; errors?: Record<string, string[]> },
+  status: number,
+  fallback: string,
+): ApiError {
+  const message = result.errors
+    ? Object.values(result.errors).flat().join(", ")
+    : result.message || fallback;
+
+  return new ApiError(message, status, result.errors);
+}
+
+export async function login(
+  email: string,
+  password: string,
+  remember: boolean,
+  role: UserRole,
+): Promise<void> {
+  const token = await getCsrfToken();
+  const res = await fetch(`${API_BASE_URL}/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-CSRF-TOKEN": token,
+    },
+    credentials: "same-origin",
+    body: JSON.stringify({ email, password, remember, role }),
+  });
+  const result: { success: boolean; message?: string; errors?: Record<string, string[]> } = await res.json();
+
+  if (!res.ok) {
+    throw createApiError(result, res.status, "Gagal masuk ke SIPINJAM.");
+  }
+}
+
+export async function logout(): Promise<void> {
+  const token = await getCsrfToken();
+  const res = await fetch(`${API_BASE_URL}/logout`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-TOKEN": token,
+    },
+    credentials: "same-origin",
+  });
+  const result: { message?: string } = await res.json();
+
+  if (!res.ok) {
+    throw new ApiError(result.message || `Gagal keluar: HTTP ${res.status}`, res.status);
+  }
+}
+
 /**
  * 1. GET: Mengambil daftar data peminjaman dari backend
  */
@@ -37,6 +109,7 @@ export async function getPeminjamanList(): Promise<ApiResponse<PeminjamanItem[]>
     headers: {
       "Accept": "application/json",
     },
+    credentials: "same-origin",
   });
 
   if (!res.ok) {
@@ -63,6 +136,7 @@ export async function createPeminjaman(data: {
       "Content-Type": "application/json",
       "Accept": "application/json",
     },
+    credentials: "same-origin",
     body: JSON.stringify(data),
   });
 
@@ -88,6 +162,8 @@ export interface UserProfile {
   no_telp?: string | null;
   status_akun?: string;
   avatar?: string | null;
+  roles?: UserRole[];
+  role?: UserRole;
   created_at?: string;
   updated_at?: string;
 }
@@ -110,10 +186,16 @@ export async function getProfile(): Promise<ApiResponse<UserProfile>> {
     headers: {
       "Accept": "application/json",
     },
+    credentials: "same-origin",
   });
 
   if (!res.ok) {
-    throw new Error(`Gagal mengambil data profil: HTTP ${res.status}`);
+    throw new ApiError(
+      res.status === 401
+        ? "Sesi login tidak ditemukan atau telah berakhir."
+        : `Gagal mengambil data profil: HTTP ${res.status}`,
+      res.status,
+    );
   }
 
   return await res.json();
@@ -123,26 +205,23 @@ export async function getProfile(): Promise<ApiResponse<UserProfile>> {
  * 4. PUT: Memperbarui data profil pengguna di backend
  */
 export async function updateProfile(data: ProfileUpdatePayload): Promise<ApiResponse<UserProfile>> {
+  const token = await getCsrfToken();
   const res = await fetch(`${API_BASE_URL}/profile`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
+      "X-CSRF-TOKEN": token,
     },
+    credentials: "same-origin",
     body: JSON.stringify(data),
   });
 
   const result = await res.json();
 
   if (!res.ok) {
-    const errorMsg = result.errors 
-      ? Object.values(result.errors).flat().join(", ") 
-      : (result.message || "Gagal memperbarui profil");
-    const err = new Error(errorMsg) as Error & { errors?: Record<string, string[]> };
-    err.errors = result.errors;
-    throw err;
+    throw createApiError(result, res.status, "Gagal memperbarui profil.");
   }
 
   return result;
 }
-

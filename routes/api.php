@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PeminjamanController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -24,9 +25,16 @@ Route::get('/ping', function () {
     ]);
 });
 
-// REST API Profil Pengguna
-Route::get('/profile', [ProfileController::class, 'show'])->name('api.profile.show');
-Route::put('/profile', [ProfileController::class, 'update'])->name('api.profile.update');
+Route::middleware('web')->group(function () {
+    Route::get('/csrf-token', [AuthController::class, 'csrfToken'])->name('api.csrf-token');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('api.login');
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:web')->name('api.logout');
+
+    Route::middleware('auth:web')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'show'])->name('api.profile.show');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('api.profile.update');
+    });
+});
 
 // REST API Peminjaman Barang / Alat
 Route::apiResource('peminjaman', PeminjamanController::class);

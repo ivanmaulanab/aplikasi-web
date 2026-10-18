@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Home, FileText, User, ArrowLeft, Search, Calendar,
   Users, MapPin, Monitor, Wind, Clock, AlertTriangle,
   LayoutDashboard, Building2, LogOut, Eye, Check, X, Bell,
-  EyeOff, Mail, Lock, ArrowRight, Package,
+  EyeOff, Mail, Lock, ArrowRight, Package, Menu,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { PeminjamanBarang } from "./components/PeminjamanBarang";
 import { ProfileView } from "./components/ProfileView";
+import { ApiError, getProfile, login, logout, UserProfile } from "../services/api";
 
 /* ─── Types & Data ────────────────────────────────────────────── */
 
-type AppState = "login" | "forgot" | "register" | "main";
+type AppState = "checking" | "login" | "forgot" | "register" | "main";
 type StatusKey = "waiting" | "approved" | "rejected";
 type Role = "user" | "admin";
-type ViewMode = "mobile" | "desktop";
 
 const STATUS_CFG: Record<StatusKey, { label: string; cls: string }> = {
   waiting: { label: "Menunggu Verifikasi", cls: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -80,18 +80,20 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
    LOGIN PAGE
 ══════════════════════════════════════════════════════════════ */
 
-function LoginPage({ onLogin, onForgot, onRegister }: {
-  onLogin: () => void;
+function LoginPage({ onLogin, onForgot, onRegister, initialError }: {
+  onLogin: (user: UserProfile, role?: Role) => void;
   onForgot: () => void;
   onRegister: () => void;
+  initialError?: string;
 }) {
+  const [selectedRole, setSelectedRole] = useState<Role>("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState(initialError || "");
 
   const validate = () => {
     const e: { email?: string; password?: string } = {};
@@ -108,9 +110,15 @@ function LoginPage({ onLogin, onForgot, onRegister }: {
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    onLogin();
+    try {
+      await login(email.trim(), password, remember, selectedRole);
+      const profile = await getProfile();
+      onLogin(profile.data, selectedRole);
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : "Gagal masuk ke SIPINJAM.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clearErr = (key: "email" | "password") =>
@@ -218,9 +226,44 @@ function LoginPage({ onLogin, onForgot, onRegister }: {
               </motion.div>
             )}
 
+            {/* Role / Account Type Selector */}
+            <div>
+              <label className="text-xs font-bold text-[#0F172A] block mb-1.5">Tipe Akun</label>
+              <div className="flex bg-[#F1F5F9] rounded-xl p-1 gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedRole("user");
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                    selectedRole === "user"
+                      ? "bg-white text-[#0F172A] shadow-sm"
+                      : "text-[#64748B] hover:text-[#0F172A]"
+                  }`}
+                >
+                  <User size={14} className={selectedRole === "user" ? "text-[#2563EB]" : "text-[#94A3B8]"} />
+                  Mahasiswa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedRole("admin");
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                    selectedRole === "admin"
+                      ? "bg-white text-[#0F172A] shadow-sm"
+                      : "text-[#64748B] hover:text-[#0F172A]"
+                  }`}
+                >
+                  <LayoutDashboard size={14} className={selectedRole === "admin" ? "text-purple-600" : "text-[#94A3B8]"} />
+                  Petugas Sarpras (Admin)
+                </button>
+              </div>
+            </div>
+
             {/* Email */}
             <div>
-              <label className="text-xs font-bold text-[#0F172A] block mb-1.5">Email atau Username</label>
+              <label className="text-xs font-bold text-[#0F172A] block mb-1.5">Email</label>
               <div className={`flex items-center gap-2.5 border rounded-xl px-3.5 py-3 transition-all duration-200 ${
                 errors.email
                   ? "border-[#DC2626] bg-red-50"
@@ -339,7 +382,7 @@ function LoginPage({ onLogin, onForgot, onRegister }: {
             {/* Prototype hint */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-2">
               <p className="text-xs text-amber-700 text-center">
-                <span className="font-bold">Prototype:</span> Gunakan email apapun (format valid) dan password min. 6 karakter
+                Gunakan email dan password akun yang sudah terdaftar.
               </p>
             </div>
           </motion.div>
@@ -1090,11 +1133,15 @@ function UserDesktopSidebar({
   setScreen,
   onLogout,
   user,
+  mobileOpen,
+  onCloseMobile,
 }: {
   screen: string;
   setScreen: (s: string) => void;
   onLogout?: () => void;
   user?: { name?: string; prodi?: string } | null;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }) {
   const isActive = (key: string) => {
     if (key === "DM01") return ["DM01", "DM02", "DM03"].includes(screen);
@@ -1106,40 +1153,83 @@ function UserDesktopSidebar({
     { key: "DM04", label: "Pengajuan Saya", Icon: FileText },
     { key: "profile", label: "Profil", Icon: User },
   ];
-  return (
-    <aside className="w-60 bg-white border-r border-[#E2E8F0] flex flex-col shrink-0">
-      <div className="px-6 py-5 border-b border-[#E2E8F0]">
-        <p className="text-[#2563EB] font-bold text-xl tracking-tight">SIPINJAM</p>
-        <p className="text-xs text-[#64748B] mt-0.5">Portal Mahasiswa</p>
+
+  const handleSelect = (key: string) => {
+    setScreen(key);
+    onCloseMobile?.();
+  };
+
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-white">
+      <div className="px-6 py-4 sm:py-5 border-b border-[#E2E8F0] flex items-center justify-between">
+        <div>
+          <p className="text-[#2563EB] font-bold text-xl tracking-tight">SIPINJAM</p>
+          <p className="text-xs text-[#64748B] mt-0.5">Portal Mahasiswa</p>
+        </div>
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="md:hidden p-1.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A] transition-colors"
+            aria-label="Tutup Menu"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
       <div className="px-4 py-4 border-b border-[#E2E8F0]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#EFF6FF] rounded-full flex items-center justify-center shrink-0">
-            <User size={16} className="text-[#2563EB]" />
+          <div className="w-10 h-10 bg-[#EFF6FF] rounded-full flex items-center justify-center shrink-0">
+            <User size={18} className="text-[#2563EB]" />
           </div>
           <div className="overflow-hidden">
-            <p className="text-sm font-semibold text-[#0F172A] truncate">{user?.name || "Rani Amelia"}</p>
+            <p className="text-sm font-semibold text-[#0F172A] truncate">{user?.name || "Pengguna"}</p>
             <p className="text-xs text-[#64748B] truncate">{user?.prodi ? `Mahasiswa · ${user.prodi}` : "Mahasiswa · TI-2023"}</p>
           </div>
         </div>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {items.map(({ key, label, Icon }) => (
-          <button key={key} onClick={() => setScreen(key)}
+          <button
+            key={key}
+            onClick={() => handleSelect(key)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-left transition-colors ${
               isActive(key) ? "bg-[#EFF6FF] text-[#2563EB]" : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
-            }`}>
-            <Icon size={16} />
+            }`}
+          >
+            <Icon size={18} />
             {label}
           </button>
         ))}
       </nav>
       <div className="px-3 py-4 border-t border-[#E2E8F0]">
-        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-red-50 hover:text-[#DC2626] transition-colors">
-          <LogOut size={16} /> Logout
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-red-50 hover:text-[#DC2626] transition-colors"
+        >
+          <LogOut size={18} /> Logout
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      <aside className="hidden md:flex w-60 lg:w-64 bg-white border-r border-[#E2E8F0] flex-col shrink-0 h-full">
+        {sidebarContent}
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={onCloseMobile}
+          />
+          <aside className="fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] shadow-2xl z-50 flex flex-col bg-white">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1150,19 +1240,21 @@ function DM01({ nav }: { nav: (s: string) => void }) {
   const filtered = searched ? ROOMS.filter((r) => !cap || r.cap >= Number(cap)) : ROOMS;
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">Cari Ruang</h1>
-          <p className="text-sm text-[#64748B] mt-1">Temukan ruang yang tersedia untuk kegiatan Anda</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A]">Cari Ruang</h1>
+          <p className="text-xs sm:text-sm text-[#64748B] mt-1">Temukan ruang yang tersedia untuk kegiatan Anda</p>
         </div>
-        <div className="relative">
-          <Bell size={20} className="text-[#64748B]" />
-          <span className="absolute -top-1 -right-1 bg-[#2563EB] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">2</span>
+        <div className="relative self-start sm:self-auto">
+          <div className="flex items-center gap-2 bg-blue-50 text-[#2563EB] px-3 py-1.5 rounded-xl text-xs font-semibold">
+            <Building2 size={16} />
+            <span>Fakultas Teknik UNY</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Ruang Tersedia", value: ROOMS.filter((r) => r.available).length, cls: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" },
           { label: "Tidak Tersedia", value: ROOMS.filter((r) => !r.available).length, cls: "text-slate-500", bg: "bg-slate-50 border-slate-200" },
@@ -1175,9 +1267,9 @@ function DM01({ nav }: { nav: (s: string) => void }) {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 mb-6 shadow-sm">
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-5 mb-6 shadow-sm">
         <h2 className="text-sm font-bold text-[#0F172A] mb-4">Filter Pencarian</h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div>
             <label className="text-xs font-semibold text-[#64748B] block mb-1.5">Tanggal</label>
             <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 py-2.5 bg-[#F8FAFC] focus-within:border-[#2563EB] transition-colors">
@@ -1206,7 +1298,7 @@ function DM01({ nav }: { nav: (s: string) => void }) {
       <h2 className="text-sm font-bold text-[#0F172A] mb-4">
         {searched ? `Hasil Pencarian (${filtered.length})` : `Semua Ruang (${ROOMS.length})`}
       </h2>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((room) => (
           <div key={room.name} className={`bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden ${!room.available ? "opacity-60" : ""}`}>
             <div className={`h-28 flex items-center justify-center relative ${room.available ? "bg-gradient-to-br from-[#2563EB] to-[#1E40AF]" : "bg-gradient-to-br from-slate-400 to-slate-500"}`}>
@@ -1244,13 +1336,13 @@ function DM01({ nav }: { nav: (s: string) => void }) {
 function DM02({ nav }: { nav: (s: string) => void }) {
   const facilities = ["Proyektor", "Meja & Kursi", "AC", "WiFi", "Papan Tulis", "Sound System"];
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <button onClick={() => nav("DM01")}
           className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#F1F5F9] border border-[#E2E8F0] transition-colors">
           <ArrowLeft size={18} className="text-[#0F172A]" />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-[200px]">
           <p className="text-xs text-[#64748B]">
             <span className="hover:text-[#2563EB] cursor-pointer" onClick={() => nav("DM01")}>Beranda</span>
             {" / Detail Ruang"}
@@ -1260,15 +1352,15 @@ function DM02({ nav }: { nav: (s: string) => void }) {
         <span className="bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">Tersedia</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-5">
-          <div className="h-56 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] rounded-2xl flex items-center justify-center shadow-lg">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-5">
+          <div className="h-44 sm:h-56 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] rounded-2xl flex items-center justify-center shadow-lg">
             <Building2 size={80} className="text-white/15" />
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-5">
             <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-4">Informasi Ruang</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { Icon: Users, label: "Kapasitas", value: "60 orang" },
                 { Icon: MapPin, label: "Lokasi", value: "Gedung Fak. Teknik, Lantai 2" },
@@ -1288,13 +1380,13 @@ function DM02({ nav }: { nav: (s: string) => void }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-5">
             <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-4">Fasilitas</h2>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {facilities.map((f) => (
                 <div key={f} className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 py-2">
                   <Check size={13} className="text-emerald-500 shrink-0" />
-                  <span className="text-sm text-[#0F172A]">{f}</span>
+                  <span className="text-xs sm:text-sm text-[#0F172A]">{f}</span>
                 </div>
               ))}
             </div>
@@ -1311,7 +1403,7 @@ function DM02({ nav }: { nav: (s: string) => void }) {
               <p className="text-xs text-[#2563EB] mt-0.5">60 orang · Gedung Fak. Teknik</p>
             </div>
             <button onClick={() => nav("DM03")}
-              className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold text-sm transition-colors">
+              className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold text-sm transition-colors shadow-sm shadow-blue-500/20">
               Ajukan Peminjaman
             </button>
             <p className="text-xs text-center text-[#94A3B8] mt-3">Diverifikasi petugas dalam 1×24 jam</p>
@@ -1352,7 +1444,7 @@ function DM03({ nav }: { nav: (s: string) => void }) {
     }`;
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => nav("DM02")}
           className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#F1F5F9] border border-[#E2E8F0] transition-colors">
@@ -1371,11 +1463,11 @@ function DM03({ nav }: { nav: (s: string) => void }) {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-5">
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-6">
             <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-5">Detail Peminjaman</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-[#0F172A] block mb-1.5">Tanggal <span className="text-[#DC2626]">*</span></label>
                 <div className={inputCls("tanggal")}>
@@ -1428,13 +1520,13 @@ function DM03({ nav }: { nav: (s: string) => void }) {
             </div>
           </div>
           <button onClick={submit}
-            className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold text-sm transition-colors">
+            className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold text-sm transition-colors shadow-sm shadow-blue-500/20">
             Kirim Pengajuan
           </button>
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-5">
             <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-4">Ringkasan Peminjaman</h2>
             <div className="h-20 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] rounded-xl flex items-center justify-center mb-4">
               <Building2 size={32} className="text-white/30" />
@@ -1479,8 +1571,8 @@ function DM04({ nav }: { nav: (s: string) => void }) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <button onClick={() => nav("DM01")}
           className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#F1F5F9] border border-[#E2E8F0] transition-colors">
           <ArrowLeft size={18} className="text-[#0F172A]" />
@@ -1489,7 +1581,7 @@ function DM04({ nav }: { nav: (s: string) => void }) {
         <div className="ml-auto"><StatusBadge status={view} /></div>
       </div>
 
-      <div className="bg-slate-100 rounded-xl p-3 mb-6 inline-flex items-center gap-3">
+      <div className="bg-slate-100 rounded-xl p-3 mb-6 flex flex-wrap items-center gap-3">
         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Demo:</p>
         <div className="flex bg-white rounded-lg p-0.5 gap-0.5">
           {(["waiting", "approved", "rejected"] as StatusKey[]).map((s) => (
@@ -1526,10 +1618,10 @@ function DM04({ nav }: { nav: (s: string) => void }) {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 bg-white rounded-2xl border border-[#E2E8F0] p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-6">
           <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-5">Detail Pengajuan</h2>
-          <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
             {[
               { label: "No. Pengajuan", value: "SIP-001", mono: true },
               { label: "Status", value: null },
@@ -1549,7 +1641,7 @@ function DM04({ nav }: { nav: (s: string) => void }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-5">
           <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-4">Progres Pengajuan</h2>
           <div>
             {steps.map((step, i) => {
@@ -1577,13 +1669,79 @@ function DM04({ nav }: { nav: (s: string) => void }) {
   );
 }
 
-function DesktopUserPrototype({ onLogout }: { onLogout?: () => void }) {
+function MobileBottomNav({
+  items,
+  activeKey,
+  onSelect,
+}: {
+  items: { key: string; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }[];
+  activeKey: (k: string) => boolean;
+  onSelect: (k: string) => void;
+}) {
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#E2E8F0] px-2 py-1.5 flex items-center justify-around z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      {items.map(({ key, label, Icon }) => {
+        const active = activeKey(key);
+        return (
+          <button
+            key={key}
+            onClick={() => onSelect(key)}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+              active ? "text-[#2563EB]" : "text-[#64748B] hover:text-[#0F172A]"
+            }`}
+          >
+            <Icon size={18} className={active ? "text-[#2563EB]" : "text-[#64748B]"} />
+            <span className={`text-[10px] ${active ? "font-bold text-[#2563EB]" : "font-medium text-[#64748B]"}`}>
+              {label}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+function DesktopUserPrototype({
+  onLogout,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+  user,
+  onProfileUpdated,
+}: {
+  onLogout?: () => void;
+  mobileMenuOpen?: boolean;
+  setMobileMenuOpen?: (v: boolean) => void;
+  user: UserProfile;
+  onProfileUpdated: (user: UserProfile) => void;
+}) {
   const [screen, setScreen] = useState("DM01");
-  const [currentUser, setCurrentUser] = useState<{ name?: string; prodi?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name?: string; prodi?: string }>({
+    name: user.name,
+    prodi: user.prodi || undefined,
+  });
+
+  const navItems = [
+    { key: "DM01", label: "Beranda", Icon: Home },
+    { key: "peminjaman-barang", label: "Pinjam Barang", Icon: Package },
+    { key: "DM04", label: "Pengajuan", Icon: FileText },
+    { key: "profile", label: "Profil", Icon: User },
+  ];
+
+  const isNavActive = (key: string) => {
+    if (key === "DM01") return ["DM01", "DM02", "DM03"].includes(screen);
+    return screen === key;
+  };
 
   return (
-    <div className="flex" style={{ height: "calc(100vh - 56px)" }}>
-      <UserDesktopSidebar screen={screen} setScreen={setScreen} onLogout={onLogout} user={currentUser} />
+    <div className="flex flex-1 overflow-hidden relative">
+      <UserDesktopSidebar
+        screen={screen}
+        setScreen={setScreen}
+        onLogout={onLogout}
+        user={currentUser}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen?.(false)}
+      />
       <div className="flex-1 overflow-hidden flex flex-col bg-[#F8FAFC]">
         {screen === "DM01" && <DM01 nav={setScreen} />}
         {screen === "DM02" && <DM02 nav={setScreen} />}
@@ -1597,10 +1755,19 @@ function DesktopUserPrototype({ onLogout }: { onLogout?: () => void }) {
         {screen === "profile" && (
           <ProfileView
             onBack={() => setScreen("DM01")}
-            onProfileUpdated={(u) => setCurrentUser({ name: u.name, prodi: u.prodi || undefined })}
+            onProfileUpdated={(updatedUser) => {
+              setCurrentUser({ name: updatedUser.name, prodi: updatedUser.prodi || undefined });
+              onProfileUpdated(updatedUser);
+            }}
           />
         )}
       </div>
+
+      <MobileBottomNav
+        items={navItems}
+        activeKey={isNavActive}
+        onSelect={(k) => setScreen(k)}
+      />
     </div>
   );
 }
@@ -1936,35 +2103,104 @@ function MobileAdminPrototype() {
    ADMIN DESKTOP  (D01 – D04)
 ══════════════════════════════════════════════════════════════ */
 
-function AdminSidebar({ screen, setScreen, onLogout }: { screen: string; setScreen: (s: string) => void; onLogout?: () => void }) {
+function AdminSidebar({
+  screen,
+  setScreen,
+  onLogout,
+  mobileOpen,
+  onCloseMobile,
+}: {
+  screen: string;
+  setScreen: (s: string) => void;
+  onLogout?: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}) {
   const isActive = (key: string) => screen === key || (key === "D02" && screen === "D03");
   const items = [
     { key: "D01", label: "Dashboard", Icon: LayoutDashboard },
     { key: "D02", label: "Pengajuan", Icon: FileText },
     { key: "peminjaman-barang", label: "Pinjam Barang (API)", Icon: Package },
   ];
-  return (
-    <aside className="w-60 bg-white border-r border-[#E2E8F0] flex flex-col shrink-0">
-      <div className="px-6 py-5 border-b border-[#E2E8F0]">
-        <p className="text-[#2563EB] font-bold text-xl tracking-tight">SIPINJAM</p>
-        <p className="text-xs text-[#64748B] mt-0.5">Sistem Peminjaman Ruang</p>
+
+  const handleSelect = (key: string) => {
+    setScreen(key);
+    onCloseMobile?.();
+  };
+
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-white">
+      <div className="px-6 py-4 sm:py-5 border-b border-[#E2E8F0] flex items-center justify-between">
+        <div>
+          <p className="text-[#2563EB] font-bold text-xl tracking-tight">SIPINJAM</p>
+          <p className="text-xs text-[#64748B] mt-0.5">Panel Petugas Sarpras</p>
+        </div>
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="md:hidden p-1.5 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A] transition-colors"
+            aria-label="Tutup Menu"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
+
+      <div className="px-4 py-4 border-b border-[#E2E8F0]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center shrink-0">
+            <User size={18} className="text-purple-600" />
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-sm font-semibold text-[#0F172A] truncate">Petugas Sarana</p>
+            <p className="text-xs text-purple-600 font-semibold truncate">Administrator</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {items.map(({ key, label, Icon }) => (
-          <button key={key} onClick={() => setScreen(key)}
+          <button
+            key={key}
+            onClick={() => handleSelect(key)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-left transition-colors ${
               isActive(key) ? "bg-[#EFF6FF] text-[#2563EB]" : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
-            }`}>
-            <Icon size={16} /> {label}
+            }`}
+          >
+            <Icon size={18} /> {label}
           </button>
         ))}
       </nav>
+
       <div className="px-3 py-4 border-t border-[#E2E8F0]">
-        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-red-50 hover:text-[#DC2626] transition-colors">
-          <LogOut size={16} /> Logout
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-red-50 hover:text-[#DC2626] transition-colors"
+        >
+          <LogOut size={18} /> Logout
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      <aside className="hidden md:flex w-60 lg:w-64 bg-white border-r border-[#E2E8F0] flex-col shrink-0 h-full">
+        {sidebarContent}
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={onCloseMobile}
+          />
+          <aside className="fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] shadow-2xl z-50 flex flex-col bg-white">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1982,46 +2218,48 @@ function D01({ setScreen }: { setScreen: (s: string) => void }) {
     { label: "Ditolak", value: counts.rejected, cls: "text-[#DC2626]", bg: "border-red-200 bg-red-50" },
   ];
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#0F172A]">Dashboard</h1>
-        <p className="text-sm text-[#64748B] mt-1">Selamat datang, Petugas Sarana &amp; Prasarana</p>
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A]">Dashboard</h1>
+        <p className="text-xs sm:text-sm text-[#64748B] mt-1">Selamat datang, Petugas Sarana &amp; Prasarana</p>
       </div>
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {stats.map(({ label, value, cls, bg }) => (
-          <div key={label} className={`rounded-2xl border p-5 ${bg}`}>
-            <p className="text-sm text-[#64748B] mb-2 leading-snug">{label}</p>
-            <p className={`text-3xl font-bold ${cls}`}>{value}</p>
+          <div key={label} className={`rounded-2xl border p-4 sm:p-5 ${bg}`}>
+            <p className="text-xs sm:text-sm text-[#64748B] mb-2 leading-snug">{label}</p>
+            <p className={`text-2xl sm:text-3xl font-bold ${cls}`}>{value}</p>
           </div>
         ))}
       </div>
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-[#0F172A]">Pengajuan Terbaru</h2>
-          <button onClick={() => setScreen("D02")} className="text-sm text-[#2563EB] font-semibold hover:underline">
+          <button onClick={() => setScreen("D02")} className="text-xs sm:text-sm text-[#2563EB] font-semibold hover:underline">
             Lihat Semua →
           </button>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                {["ID Pengajuan", "Pemohon", "Ruang", "Status"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-bold text-[#64748B] uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {SUBS.slice(0, 3).map((s) => (
-                <tr key={s.id} className="hover:bg-[#F8FAFC] cursor-pointer transition-colors" onClick={() => setScreen("D03")}>
-                  <td className="px-5 py-3.5 font-mono text-sm font-bold text-[#0F172A]">{s.id}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#0F172A]">{s.name}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#64748B]">{s.room}</td>
-                  <td className="px-5 py-3.5"><StatusBadge status={s.status} /></td>
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                  {["ID Pengajuan", "Pemohon", "Ruang", "Status"].map((h) => (
+                    <th key={h} className="px-5 py-3 text-left text-xs font-bold text-[#64748B] uppercase tracking-wide">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {SUBS.slice(0, 3).map((s) => (
+                  <tr key={s.id} className="hover:bg-[#F8FAFC] cursor-pointer transition-colors" onClick={() => setScreen("D03")}>
+                    <td className="px-5 py-3.5 font-mono text-sm font-bold text-[#0F172A]">{s.id}</td>
+                    <td className="px-5 py-3.5 text-sm text-[#0F172A]">{s.name}</td>
+                    <td className="px-5 py-3.5 text-sm text-[#64748B]">{s.room}</td>
+                    <td className="px-5 py-3.5"><StatusBadge status={s.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -2038,19 +2276,19 @@ function D02({ setScreen }: { setScreen: (s: string) => void }) {
     return match && (filter === "all" || s.status === filter);
   });
   return (
-    <div className="flex-1 overflow-y-auto p-8">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#0F172A]">Daftar Pengajuan</h1>
-        <p className="text-sm text-[#64748B] mt-1">{SUBS.length} total pengajuan</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A]">Daftar Pengajuan</h1>
+        <p className="text-xs sm:text-sm text-[#64748B] mt-1">{SUBS.length} total pengajuan</p>
       </div>
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-4 py-2.5 bg-white flex-1 min-w-48 focus-within:border-[#2563EB] transition-colors">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-4 py-2.5 bg-white flex-1 min-w-[200px] focus-within:border-[#2563EB] transition-colors">
           <Search size={15} className="text-[#94A3B8] shrink-0" />
           <input type="text" placeholder="Cari ID, nama, atau ruang..." value={q}
             onChange={(e) => setQ(e.target.value)}
             className="flex-1 bg-transparent text-sm text-[#0F172A] outline-none placeholder-slate-300" />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {(["all", "waiting", "approved", "rejected"] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
@@ -2061,33 +2299,35 @@ function D02({ setScreen }: { setScreen: (s: string) => void }) {
           ))}
         </div>
       </div>
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-              {["ID Pengajuan", "Pemohon", "Ruang", "Tanggal", "Status", "Aksi"].map((h) => (
-                <th key={h} className="px-5 py-3 text-left text-xs font-bold text-[#64748B] uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#E2E8F0]">
-            {filtered.map((s) => (
-              <tr key={s.id} className="hover:bg-[#F8FAFC] transition-colors">
-                <td className="px-5 py-3.5 font-mono text-sm font-bold text-[#0F172A]">{s.id}</td>
-                <td className="px-5 py-3.5 text-sm text-[#0F172A]">{s.name}</td>
-                <td className="px-5 py-3.5 text-sm text-[#64748B]">{s.room}</td>
-                <td className="px-5 py-3.5 text-sm text-[#64748B]">{s.date}</td>
-                <td className="px-5 py-3.5"><StatusBadge status={s.status} /></td>
-                <td className="px-5 py-3.5">
-                  <button onClick={() => setScreen("D03")}
-                    className="flex items-center gap-1.5 text-sm text-[#2563EB] font-semibold hover:underline">
-                    <Eye size={14} /> Lihat Detail
-                  </button>
-                </td>
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px]">
+            <thead>
+              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                {["ID Pengajuan", "Pemohon", "Ruang", "Tanggal", "Status", "Aksi"].map((h) => (
+                  <th key={h} className="px-5 py-3 text-left text-xs font-bold text-[#64748B] uppercase tracking-wide">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#E2E8F0]">
+              {filtered.map((s) => (
+                <tr key={s.id} className="hover:bg-[#F8FAFC] transition-colors">
+                  <td className="px-5 py-3.5 font-mono text-sm font-bold text-[#0F172A]">{s.id}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#0F172A]">{s.name}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#64748B]">{s.room}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#64748B]">{s.date}</td>
+                  <td className="px-5 py-3.5"><StatusBadge status={s.status} /></td>
+                  <td className="px-5 py-3.5">
+                    <button onClick={() => setScreen("D03")}
+                      className="flex items-center gap-1.5 text-sm text-[#2563EB] font-semibold hover:underline">
+                      <Eye size={14} /> Lihat Detail
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-[#64748B]">Tidak ada pengajuan yang sesuai filter.</p>
         )}
@@ -2107,15 +2347,15 @@ function D03({ setScreen, status, setStatus, conflict, setConflict, onReject, re
 }) {
   const sub = SUBS[0];
   return (
-    <div className="flex-1 overflow-y-auto p-8">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => setScreen("D02")}
           className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#F1F5F9] border border-[#E2E8F0] transition-colors">
           <ArrowLeft size={18} className="text-[#0F172A]" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">Detail Pengajuan</h1>
-          <p className="text-sm text-[#64748B] font-mono mt-0.5">{sub.id}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A]">Detail Pengajuan</h1>
+          <p className="text-xs sm:text-sm text-[#64748B] font-mono mt-0.5">{sub.id}</p>
         </div>
       </div>
 
@@ -2179,10 +2419,10 @@ function D03({ setScreen, status, setStatus, conflict, setConflict, onReject, re
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 bg-white rounded-2xl border border-[#E2E8F0] p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-6 shadow-sm">
           <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-5">Informasi Pengajuan</h2>
-          <div className="grid grid-cols-2 gap-y-5 gap-x-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6">
             {[
               { label: "No. Pengajuan", value: sub.id, mono: true },
               { label: "Status", value: null },
@@ -2204,14 +2444,14 @@ function D03({ setScreen, status, setStatus, conflict, setConflict, onReject, re
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 sm:p-5 shadow-sm">
             <h2 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-3">Tujuan Kegiatan</h2>
             <p className="text-sm text-[#0F172A] leading-relaxed">{sub.purpose}</p>
           </div>
           {status === "waiting" && (
             <div className="space-y-2">
               <button onClick={() => setStatus("approved")}
-                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-2.5 rounded-xl text-sm font-bold transition-colors">
+                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm shadow-blue-500/20">
                 Setujui
               </button>
               <button onClick={onReject}
@@ -2234,8 +2474,8 @@ function D04Modal({ input, setInput, onClose, onConfirm }: {
 }) {
   const sub = SUBS[0];
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
           <h2 className="font-bold text-[#0F172A]">Tolak Pengajuan</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-[#F1F5F9] transition-colors">
@@ -2260,9 +2500,9 @@ function D04Modal({ input, setInput, onClose, onConfirm }: {
               className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none resize-none placeholder-slate-300 focus:border-[#2563EB] transition-colors" />
           </div>
         </div>
-        <div className="flex items-center gap-3 px-6 py-4 border-t border-[#E2E8F0]">
+        <div className="flex items-center gap-3 px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC]">
           <button onClick={onClose}
-            className="flex-1 border border-[#E2E8F0] text-[#64748B] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#F8FAFC] transition-colors">
+            className="flex-1 border border-[#E2E8F0] bg-white text-[#64748B] py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-colors">
             Batal
           </button>
           <button onClick={onConfirm} disabled={!input.trim()}
@@ -2275,7 +2515,15 @@ function D04Modal({ input, setInput, onClose, onConfirm }: {
   );
 }
 
-function DesktopAdminPrototype({ onLogout }: { onLogout?: () => void }) {
+function DesktopAdminPrototype({
+  onLogout,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+}: {
+  onLogout?: () => void;
+  mobileMenuOpen?: boolean;
+  setMobileMenuOpen?: (v: boolean) => void;
+}) {
   const [screen, setScreen] = useState("D01");
   const [d03Status, setD03Status] = useState<StatusKey>("waiting");
   const [conflict, setConflict] = useState(false);
@@ -2294,9 +2542,21 @@ function DesktopAdminPrototype({ onLogout }: { onLogout?: () => void }) {
     setShowD04(false);
   };
 
+  const navItems = [
+    { key: "D01", label: "Dashboard", Icon: LayoutDashboard },
+    { key: "D02", label: "Pengajuan", Icon: FileText },
+    { key: "peminjaman-barang", label: "Pinjam Barang", Icon: Package },
+  ];
+
   return (
-    <div className="flex" style={{ height: "calc(100vh - 56px)" }}>
-      <AdminSidebar screen={screen} setScreen={navTo} onLogout={onLogout} />
+    <div className="flex flex-1 overflow-hidden relative">
+      <AdminSidebar
+        screen={screen}
+        setScreen={navTo}
+        onLogout={onLogout}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen?.(false)}
+      />
       <div className="flex-1 overflow-hidden flex flex-col bg-[#F8FAFC]">
         {screen === "D01" && <D01 setScreen={navTo} />}
         {screen === "D02" && <D02 setScreen={navTo} />}
@@ -2314,6 +2574,13 @@ function DesktopAdminPrototype({ onLogout }: { onLogout?: () => void }) {
           />
         )}
       </div>
+
+      <MobileBottomNav
+        items={navItems}
+        activeKey={(k) => screen === k || (k === "D02" && screen === "D03")}
+        onSelect={(k) => navTo(k)}
+      />
+
       {showD04 && (
         <D04Modal input={rejectInput} setInput={setRejectInput}
           onClose={() => setShowD04(false)} onConfirm={handleConfirmReject} />
@@ -2327,21 +2594,85 @@ function DesktopAdminPrototype({ onLogout }: { onLogout?: () => void }) {
 ══════════════════════════════════════════════════════════════ */
 
 export default function App() {
-  const [appState, setAppState] = useState<AppState>("login");
+  const [appState, setAppState] = useState<AppState>("checking");
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [sessionError, setSessionError] = useState("");
   const [role, setRole] = useState<Role>("user");
-  const [viewMode, setViewMode] = useState<ViewMode>("mobile");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
 
-  const handleLogin = () => setAppState("main");
-  const handleLogout = () => {
-    setAppState("login");
-    setRole("user");
-    setViewMode("mobile");
+  useEffect(() => {
+    let isMounted = true;
+
+    getProfile()
+      .then((profile) => {
+        if (isMounted) {
+          setCurrentUser(profile.data);
+          setRole(profile.data.role || "user");
+          setAppState("main");
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (!(error instanceof ApiError && error.status === 401)) {
+          setSessionError(error instanceof Error ? error.message : "Gagal memeriksa sesi login.");
+        }
+
+        setAppState("login");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleLogin = (user: UserProfile) => {
+    const nextRole = user.role || "user";
+    setCurrentUser(user);
+    setSessionError("");
+    setRole(nextRole);
+    setAppState("main");
   };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setSessionError("");
+    } catch (error: unknown) {
+      if (!(error instanceof ApiError && error.status === 401)) {
+        setSessionError(error instanceof Error ? error.message : "Gagal keluar dari SIPINJAM.");
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("sipinjam_role");
+    }
+    setAppState("login");
+    setCurrentUser(null);
+    setRole("user");
+    setMobileMenuOpen(false);
+    setShowNotif(false);
+  };
+
+  if (appState === "checking") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-[#2563EB] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm font-semibold text-[#0F172A]">Memeriksa sesi login...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (appState === "login") {
     return (
       <LoginPage
         onLogin={handleLogin}
+        initialError={sessionError}
         onForgot={() => setAppState("forgot")}
         onRegister={() => setAppState("register")}
       />
@@ -2353,59 +2684,133 @@ export default function App() {
   }
 
   if (appState === "register") {
-    return <RegisterPage onBack={() => setAppState("login")} onRegister={handleLogin} />;
+    return (
+      <RegisterPage
+        onBack={() => setAppState("login")}
+        onRegister={() => {
+          setSessionError("Pendaftaran akun belum terhubung. Silakan gunakan akun yang sudah terdaftar.");
+          setAppState("login");
+        }}
+      />
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <p className="text-sm font-semibold text-[#0F172A]">Memeriksa sesi login...</p>
+      </div>
+    );
   }
 
   return (
     <motion.div
-      className="min-h-screen"
+      className="h-screen flex flex-col bg-[#F8FAFC] overflow-hidden"
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="bg-white border-b border-[#E2E8F0] px-6 flex items-center justify-between" style={{ height: 56 }}>
-        <div className="flex items-center gap-3">
-          <span className="font-bold text-[#2563EB] text-lg">SIPINJAM</span>
-          <span className="text-[#E2E8F0] select-none">|</span>
-          <span className="text-xs text-[#64748B]">Prototype Interaktif · Pertemuan 3</span>
+      {/* ── Top Navbar (Clean, Responsive, No Toggle Buttons) ── */}
+      <header className="bg-white border-b border-[#E2E8F0] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 h-14 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="md:hidden p-2 -ml-2 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+            aria-label="Buka Menu"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 bg-[#2563EB] rounded-xl flex items-center justify-center shadow-sm">
+              <Building2 size={18} className="text-white" />
+            </div>
+            <span className="font-bold text-[#2563EB] text-lg sm:text-xl tracking-tight">SIPINJAM</span>
+          </div>
+
+          <span className="hidden sm:inline text-[#E2E8F0] select-none">|</span>
+          <span className="hidden sm:inline text-xs font-medium text-[#64748B] truncate">
+            {role === "admin" ? "Panel Petugas Sarana & Prasarana" : "Sistem Peminjaman Ruang & Alat Kampus"}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-[#F1F5F9] rounded-xl p-1 gap-0.5">
-            {(["user", "admin"] as Role[]).map((r) => (
-              <button key={r} onClick={() => setRole(r)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                  role === r ? "bg-white text-[#0F172A] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
-                }`}>
-                {r === "user" ? "Pengguna" : "Admin"}
-              </button>
-            ))}
+
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+            role === "admin"
+              ? "bg-purple-50 text-purple-700 border border-purple-200"
+              : "bg-blue-50 text-blue-700 border border-blue-200"
+          }`}>
+            {role === "admin" ? "Petugas Sarpras" : "Mahasiswa"}
+          </span>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowNotif(!showNotif)}
+              className="relative p-2 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+              title="Notifikasi"
+              aria-label="Notifikasi"
+            >
+              <Bell size={18} />
+              <span className="absolute top-1.5 right-1.5 bg-[#2563EB] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                2
+              </span>
+            </button>
+
+            {showNotif && (
+              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
+                  <p className="text-sm font-bold text-[#0F172A]">Notifikasi</p>
+                  <span className="text-[10px] text-[#2563EB] font-semibold bg-blue-50 px-2 py-0.5 rounded-full">2 Baru</span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="p-2 rounded-xl bg-blue-50/60 border border-blue-100">
+                    <p className="font-semibold text-[#0F172A]">Pengajuan SIP-002 Disetujui</p>
+                    <p className="text-[#64748B] text-[11px] mt-0.5">Ruang Lab Komputer 1 telah siap digunakan.</p>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="font-semibold text-[#0F172A]">Pengajuan SIP-001 Menunggu</p>
+                    <p className="text-[#64748B] text-[11px] mt-0.5">Sedang diverifikasi oleh petugas sarana.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex bg-[#F1F5F9] rounded-xl p-1 gap-0.5">
-            {(["mobile", "desktop"] as ViewMode[]).map((v) => (
-              <button key={v} onClick={() => setViewMode(v)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                  viewMode === v ? "bg-white text-[#0F172A] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
-                }`}>
-                {v === "mobile" ? "Mobile" : "Desktop"}
-              </button>
-            ))}
-          </div>
-          <div className="w-px h-5 bg-[#E2E8F0]" />
+
+          <div className="w-px h-5 bg-[#E2E8F0] hidden sm:block" />
+
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-red-50 hover:text-[#DC2626] transition-colors"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#64748B] hover:bg-red-50 hover:text-[#DC2626] transition-colors"
+            title="Keluar dari akun"
           >
-            <LogOut size={15} />
+            <LogOut size={16} />
             <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {role === "user" && viewMode === "mobile" && <MobileUserPrototype />}
-      {role === "user" && viewMode === "desktop" && <DesktopUserPrototype onLogout={handleLogout} />}
-      {role === "admin" && viewMode === "mobile" && <MobileAdminPrototype />}
-      {role === "admin" && viewMode === "desktop" && <DesktopAdminPrototype onLogout={handleLogout} />}
+      {/* Main Content Body */}
+      {role === "user" ? (
+        <DesktopUserPrototype
+          key={currentUser.id}
+          onLogout={handleLogout}
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+          user={currentUser}
+          onProfileUpdated={(updatedUser) => {
+            setCurrentUser((activeUser) =>
+              activeUser?.id === updatedUser.id ? updatedUser : activeUser,
+            );
+          }}
+        />
+      ) : (
+        <DesktopAdminPrototype
+          onLogout={handleLogout}
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+        />
+      )}
     </motion.div>
   );
 }

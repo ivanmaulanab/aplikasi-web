@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   IdCard,
 } from "lucide-react";
-import { getProfile, updateProfile, UserProfile } from "../../services/api";
+import { ApiError, getProfile, updateProfile, UserProfile } from "../../services/api";
 
 interface ProfileViewProps {
   onBack?: () => void;
@@ -48,6 +48,7 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
   // Fetch profile from backend
   const fetchProfile = async () => {
     setLoading(true);
+    setProfile(null);
     setErrorMsg(null);
     try {
       const res = await getProfile();
@@ -64,9 +65,11 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
         if (onProfileUpdated) {
           onProfileUpdated(res.data);
         }
+      } else {
+        throw new Error("Server tidak mengirimkan data profil.");
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || "Gagal memuat data profil dari server.");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Gagal memuat data profil dari server.");
     } finally {
       setLoading(false);
     }
@@ -137,12 +140,12 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
           onProfileUpdated(res.data);
         }
       }
-    } catch (err: any) {
-      if (err.errors) {
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.errors) {
         setFieldErrors(err.errors);
         setErrorMsg("Terdapat kesalahan pada input formulir. Silakan periksa kembali.");
       } else {
-        setErrorMsg(err.message || "Gagal menyimpan perubahan profil.");
+        setErrorMsg(err instanceof Error ? err.message : "Gagal menyimpan perubahan profil.");
       }
     } finally {
       setSubmitting(false);
@@ -280,7 +283,7 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
 
             {/* Nama & Info Singkat */}
             <h2 className="text-lg font-bold text-[#0F172A] tracking-tight">
-              {profile?.name || "Nama Pengguna"}
+              {profile?.name || "Belum diisi"}
             </h2>
             <p className="text-xs text-[#64748B] mt-0.5 font-medium">
               {profile?.nim ? `NIM: ${profile.nim}` : "NIM belum diisi"}
@@ -290,7 +293,7 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
             <div className="mt-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
                 <GraduationCap size={13} />
-                {profile?.prodi || "Program Studi"}
+                {profile?.prodi || "Belum diisi"}
               </span>
             </div>
 
@@ -298,7 +301,7 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
             <div className="mt-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                {profile?.status_akun || "Mahasiswa Aktif"}
+                {profile?.status_akun || "Belum diisi"}
               </span>
             </div>
 
@@ -315,13 +318,14 @@ export function ProfileView({ onBack, isMobile = false, onProfileUpdated }: Prof
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748B]">Unit Akademik</span>
                 <span className="font-semibold text-[#0F172A]">
-                  {profile?.fakultas || "Fakultas Teknik"}
+                  {profile?.fakultas || "Belum diisi"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748B]">Status Autentikasi</span>
-                <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                  <Check size={12} /> Terhubung
+                <span className={`${profile ? "text-emerald-600" : "text-red-600"} font-semibold flex items-center gap-1`}>
+                  {profile ? <Check size={12} /> : <X size={12} />}
+                  {profile ? "Terhubung" : "Tidak tersedia"}
                 </span>
               </div>
             </div>
