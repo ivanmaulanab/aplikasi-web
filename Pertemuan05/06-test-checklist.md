@@ -12,3 +12,5 @@
 | 8 | Tampil nama relasi | Nama ruangan tampil pada daftar tiket pengajuan | SUDAH | Eager loading with('room') bekerja |
 | 9 | Batalkan pengajuan | Data tiket terhapus dari tabel `bookings` | SUDAH | Delete booking berhasil |
 | 10 | Tampilan responsif | Tabel dan form rapi tanpa overflow horizontal | SUDAH | Menggunakan CSS Grid & Flexbox |
+
+<!-- Uji 1: tampil daftar ruang -->
