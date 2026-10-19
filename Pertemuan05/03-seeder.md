@@ -6,3 +6,5 @@ Pengisian data awal diinisialisasi melalui `database/seeders/RoomSeeder.php` yan
 3. **Ruang Rapat**: Kapasitas 20 Orang, Gedung A Lantai 3 (Status: Tidak Tersedia).
 
 <!-- Catatan eksekusi RoomSeeder MySQL -->
+
+<!-- Validasi kapasitas ruang praktikum -->
