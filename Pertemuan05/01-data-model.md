@@ -20,3 +20,5 @@ Mata Kuliah: Praktik Aplikasi Web (INF60295) - Pertemuan 5
 ## 2. Relasi Eloquent Antarentitas
 - **Room (1) to Many (N) Booking:** Satu ruangan kampus dapat memiliki banyak riwayat pengajuan peminjaman (`$this->hasMany(Booking::class)`).
 - **Booking (N) to One (1) Room:** Setiap pengajuan tiket hanya terikat secara spesifik pada satu entitas ruang (`$this->belongsTo(Room::class)`).
+
+<!-- Verifikasi skema atribut rooms -->
