@@ -14,3 +14,5 @@
 | 10 | Tampilan responsif | Tabel dan form rapi tanpa overflow horizontal | SUDAH | Menggunakan CSS Grid & Flexbox |
 
 <!-- Uji 1: tampil daftar ruang -->
+
+<!-- Uji 2: validasi form tambah ruang -->
