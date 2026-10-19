@@ -18,3 +18,5 @@
 <!-- Uji 2: validasi form tambah ruang -->
 
 <!-- Uji 3: update data ruang -->
+
+<!-- Uji 4: hapus data ruang -->
