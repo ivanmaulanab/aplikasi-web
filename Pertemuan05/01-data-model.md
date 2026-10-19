@@ -22,3 +22,5 @@ Mata Kuliah: Praktik Aplikasi Web (INF60295) - Pertemuan 5
 - **Booking (N) to One (1) Room:** Setiap pengajuan tiket hanya terikat secara spesifik pada satu entitas ruang (`$this->belongsTo(Room::class)`).
 
 <!-- Verifikasi skema atribut rooms -->
+
+<!-- Verifikasi relasi foreign key bookings -->
