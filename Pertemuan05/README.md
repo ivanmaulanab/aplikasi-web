@@ -15,3 +15,4 @@ Basis Data, Model Data, Migration, Seeder, dan CRUD
 2. Buat database:
    ```sql
    CREATE DATABASE ruang_kampus;
+<!-- Evaluasi implementasi Eloquent ORM -->
