@@ -16,3 +16,5 @@ Basis Data, Model Data, Migration, Seeder, dan CRUD
    ```sql
    CREATE DATABASE ruang_kampus;
 <!-- Evaluasi implementasi Eloquent ORM -->
+
+<!-- Finalisasi dokumen modul 5 Yuki Ramadhan -->
