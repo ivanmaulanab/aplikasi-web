@@ -26,3 +26,5 @@
 <!-- Uji 6: cek bentrok jadwal -->
 
 <!-- Update log verifikasi pengujian modul 5 ke-1 pada 2026-10-21 02:39:27 -->
+
+<!-- Update log verifikasi pengujian modul 5 ke-2 pada 2026-10-21 02:39:27 -->
