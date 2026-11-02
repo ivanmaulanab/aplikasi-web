@@ -59,6 +59,30 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 ---
 
+## Database lokal (SQLite)
+
+Aplikasi SIPINJAM menggunakan SQLite secara lokal dengan file `database/database.sqlite`, sehingga tidak perlu menjalankan server MySQL. Konfigurasi `.env` memakai `DB_CONNECTION=sqlite`; Laravel otomatis menggunakan file database tersebut.
+
+Jalankan migration untuk membuat tabel aplikasi:
+
+```powershell
+php artisan migrate
+```
+
+Jangan gunakan `migrate:fresh` jika ingin mempertahankan data yang sudah tersimpan.
+
+Untuk menjalankan backend dan frontend, gunakan dua terminal dari direktori proyek:
+
+```powershell
+php artisan serve
+```
+
+```powershell
+cd frontend\aplikasi-SIPINJAM
+npm install
+npm run dev
+```
+
 ## Pertemuan 03: Information Architecture, Wireframe & Prototype
 
 Pada Pertemuan 3, proyek **SIPINJAM (Sistem Peminjaman Ruang dan Peralatan Kampus)** berfokus pada perancangan arsitektur informasi, alur interaksi pengguna, wireframe beresolusi terstandarisasi, dan spesifikasi prototipe interaktif pada branch `risky-job3`.
@@ -76,4 +100,3 @@ Dokumen lengkap tugas dapat diakses pada direktori [Pertemuan03/](file:///c:/Use
 - **Figma Blueprint & Layout Specs**: [FIGMA-BLUEPRINT.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/FIGMA-BLUEPRINT.md)
 - **Matriks Keterlacakan Kebutuhan**: [traceability-matrix.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/traceability-matrix.md)
 - **README Pertemuan 3**: [README.md](file:///c:/Users/MSI%20NOTEBOOK/Documents/Kulyeah/aplikasi-web/Pertemuan03/README.md)
-
