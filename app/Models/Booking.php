@@ -1,16 +1,20 @@
-<?php
+﻿<?php
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Booking extends Model
 {
-    protected $fillable = [
+    use HasFactory;
+
+    protected \$fillable = [
+        'user_id',
         'room_id',
+        'borrower_name',
         'activity_name',
-        'date',
+        'booking_date',
         'start_time',
         'end_time',
         'participants',
@@ -18,8 +22,13 @@ class Booking extends Model
         'status',
     ];
 
-    public function room(): BelongsTo
+    public function room()
     {
-        return $this->belongsTo(Room::class);
+        return \$this->belongsTo(Room::class);
+    }
+
+    public function user()
+    {
+        return \$this->belongsTo(User::class);
     }
 }
