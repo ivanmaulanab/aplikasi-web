@@ -3,106 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Ruangan</title>
-
+    <title>Daftar Ruangan - SIPINJAM</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            padding: 40px;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-
-        .button {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 10px 16px;
-            text-decoration: none;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        .success {
-            background: #dcfce7;
-            color: #166534;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-
-        th {
-            background: #f1f5f9;
-        }
-
-        .action {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-            margin-right: 4px;
-        }
-
-        .detail {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-
-        .edit {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .delete {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
+        body { font-family: Arial, sans-serif; background: whitesmoke; margin: 0; padding: 24px; }
+        .nav { max-width: 1000px; margin: 0 auto 16px auto; background: white; padding: 12px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .nav a { margin-right: 12px; text-decoration: none; color: royalblue; font-weight: bold; }
+        .card { background: white; max-width: 1000px; margin: 0 auto; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .btn { display: inline-block; background: royalblue; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; border: none; cursor: pointer; }
+        .btn-danger { background: crimson; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid gainsboro; }
+        th { background: aliceblue; }
     </style>
 </head>
-
 <body>
-
-<div class="container">
-
-    <h1>Daftar Ruangan</h1>
-
-    @if(session('success'))
-        <div class="success">
-            {{ session('success') }}
-        </div>
+<div class="nav">
+    <div>
+        <a href="{{ route('rooms.index') }}">Daftar Ruang</a>
+        @auth
+            <a href="{{ route('dashboard') }}">Dashboard</a>
+            <a href="{{ route('bookings.index') }}">Pengajuan</a>
+        @endauth
+    </div>
+    <div>
+        @auth
+            <span>{{ auth()->user()->name }} ({{ auth()->user()->role }})</span>
+            <form action="{{ route('logout') }}" method="POST" style="display:inline; margin-left: 10px;">
+                @csrf
+                <button type="submit" class="btn btn-danger">Keluar</button>
+            </form>
+        @else
+            <a href="{{ route('login') }}">Masuk</a>
+            <a href="{{ route('register') }}">Daftar</a>
+        @endauth
+    </div>
+</div>
+<div class="card">
+    <h2>Daftar Ruangan Kampus</h2>
+    @if (auth()->check() && auth()->user()->isAdmin())
+        <a href="{{ route('rooms.create') }}" class="btn">+ Tambah Ruangan</a>
     @endif
-
-    <a href="{{ route('rooms.create') }}" class="button">
-        + Tambah Ruangan
-    </a>
-
     <table>
         <thead>
             <tr>
@@ -114,56 +54,35 @@
                 <th>Aksi</th>
             </tr>
         </thead>
-
         <tbody>
             @forelse($rooms as $room)
                 <tr>
                     <td>{{ $room->name }}</td>
-                    <td>{{ $room->capacity }} orang</td>
+                    <td>{{ $room->capacity }} Orang</td>
                     <td>{{ $room->location }}</td>
-                    <td>{{ $room->facilities ?? '-' }}</td>
-
+                    <td>{{ $room->facilities }}</td>
+                    <td>{{ $room->status }}</td>
                     <td>
-                        {{ $room->is_available ? 'Tersedia' : 'Tidak tersedia' }}
-                    </td>
-
-                    <td>
-                        <a href="{{ route('rooms.show', $room) }}"
-                           class="action detail">
-                            Detail
-                        </a>
-
-                        <a href="{{ route('rooms.edit', $room) }}"
-                           class="action edit">
-                            Edit
-                        </a>
-
-                        <form action="{{ route('rooms.destroy', $room) }}"
-                              method="POST"
-                              style="display:inline;">
-
-                            @csrf
-                            @method('DELETE')
-
-                            <button type="submit"
-                                    class="action delete"
-                                    onclick="return confirm('Yakin ingin menghapus ruangan ini?')">
-                                Hapus
-                            </button>
-                        </form>
+                        @auth
+                            <a href="{{ route('bookings.create', ['room_id' => $room->id]) }}" class="btn">Ajukan</a>
+                        @else
+                            <a href="{{ route('login') }}">Masuk untuk mengajukan</a>
+                        @endauth
+                        @if (auth()->check() && auth()->user()->isAdmin())
+                            <a href="{{ route('rooms.edit', $room) }}" class="btn">Edit</a>
+                            <form action="{{ route('rooms.destroy', $room) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">Hapus</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="6">
-                        Belum ada data ruangan.
-                    </td>
-                </tr>
+                <tr><td colspan="6">Belum ada data ruangan.</td></tr>
             @endforelse
         </tbody>
     </table>
-
 </div>
-
 </body>
 </html>

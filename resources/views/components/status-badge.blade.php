@@ -1,4 +1,4 @@
-﻿@props(['status' => 'pending'])
+@props(['status' => 'pending'])
 @php
   $cfg = [
     'pending' => ['bg' => '#fef3c7', 'color' => '#92400e', 'label' => 'Menunggu Verifikasi'],
